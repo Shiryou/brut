@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourceUtilityLib", "ResourceUtilityLib\ResourceUtilityLib.csproj", "{55687DF7-979F-4369-AD96-933C19DE1F10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourceUtilityCli", "ResourceUtilityCli\ResourceUtilityCli.csproj", "{CC1158E0-1E58-4A73-9393-C452B2E9FD21}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{55687DF7-979F-4369-AD96-933C19DE1F10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55687DF7-979F-4369-AD96-933C19DE1F10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55687DF7-979F-4369-AD96-933C19DE1F10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55687DF7-979F-4369-AD96-933C19DE1F10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC1158E0-1E58-4A73-9393-C452B2E9FD21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC1158E0-1E58-4A73-9393-C452B2E9FD21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC1158E0-1E58-4A73-9393-C452B2E9FD21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC1158E0-1E58-4A73-9393-C452B2E9FD21}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4C73F0F5-6BD7-43C4-84C1-06B49391D6AE}
+	EndGlobalSection
+EndGlobal
