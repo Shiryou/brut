@@ -2,6 +2,19 @@
 
 namespace ResourceUtilityLib
 {
+    enum HashAlgorithm
+    {
+        HashCrc,
+        HashId
+    }
+
+    enum CompressionTypes
+    {
+        NoCompression,
+        RLECompression, // Not supported by resutil 4, but needs to be here so LZSS is 2.
+        LZSSCompression
+    }
+
     /// <summary>
     /// Structure describing a directory entry in the resource file.
     /// </summary>
@@ -40,14 +53,15 @@ namespace ResourceUtilityLib
         private string[] supported_extensions = ["", "PCX", "FLC", "WAV"];
         private uint resource_start_code = 1129468754;
         private uint end_of_header = 12;
-        private uint size_of_rheader = 36;
+        //private uint size_of_rheader = 36;
 
         private uint file_version;
         private uint directory;
         private uint resources;
+        private HashAlgorithm hash_alg = HashAlgorithm.HashId;
 
         private DirectoryEntry[] dirEntries = [];
-        private BinaryReader? resource_file = null;
+        private BinaryReader resource_file;
 
         /// <summary>
         /// Load the file header for a resource file and perform some sanity checks.
@@ -139,7 +153,7 @@ namespace ResourceUtilityLib
         /// <returns></returns>
         public string CharArrayToString(char[] str)
         {
-            return (new string(str, 0, str.Length)).Replace('\0', ' ');
+            return (new string(str, 0, str.Length)).Replace("\0", "");
         }
 
         /// <summary>
@@ -183,6 +197,10 @@ namespace ResourceUtilityLib
                 LoadFileHeader();
                 LoadDirectory();
             }
+            else
+            {
+                throw new FileNotFoundException();
+            }
         }
 
         /// <summary>
@@ -223,6 +241,58 @@ namespace ResourceUtilityLib
                 }
             }
             return strings;
+        }
+
+        /// <summary>
+        /// Extract a file from the resource file.
+        /// </summary>
+        /// <param name="filename"></param>
+        public void ExtractFile(string filename)
+        {
+            ExtractFile(StringToCharArray(filename));
+        }
+
+        /// <summary>
+        /// Extract a file from the resource file.
+        /// </summary>
+        /// <param name="filename"></param>
+        public void ExtractFile(char[] filename)
+        {
+            string filename_str = CharArrayToString(filename);
+            uint hash = 0;
+            if( hash_alg == HashAlgorithm.HashCrc )
+            {
+                hash = HashCalculator.HashCRC(filename_str);
+            }
+            else
+            {
+                hash = HashCalculator.HashID(filename_str);
+            }
+
+            uint position = end_of_header;
+            for ( int i = 0; i < resources; i++ )
+            {
+                ResourceHeader header = LoadResourceHeader(position);
+
+                if( header.hash == hash )
+                {
+                    Console.WriteLine(String.Format("Reading {0} bytes of data.", (int)header.cbCompressedData));
+                    byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
+                    if( (int)header.compressionCode == (int)CompressionTypes.NoCompression)
+                    {
+                        Console.WriteLine(String.Format("{0} is not compressed. Writing {1} bytes of data.", filename_str, (int)header.cbCompressedData));
+                        BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false);
+                        save_file.Write(compressed_data);
+                        save_file.Close();
+                    }
+                    else if ((int)header.compressionCode == (int)CompressionTypes.LZSSCompression)
+                    {
+                        Console.WriteLine(String.Format("{0} is compressed with LZSS compression, which is not yet supported. {1} bytes of data will NOT be written.", filename_str, (int)header.cbUncompressedData));
+                    }
+                }
+
+                position = position + header.cbChunk;
+            }
         }
     }
 }
