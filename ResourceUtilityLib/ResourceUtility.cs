@@ -47,21 +47,21 @@ namespace ResourceUtilityLib
     /// </summary>
     public class ResourceUtility
     {
-        private Int32 resutil_version = 0x00000400;
-        private int max_resource_name = 13;
-        private string[] gszCompressionType = ["not  compressed", "RLE  compressed", "LZSS compressed"];
-        private string[] supported_extensions = ["", "PCX", "FLC", "WAV"];
-        private uint resource_start_code = 1129468754;
-        private uint end_of_header = 12;
+        private readonly Int32 resutil_version = 0x00000400;
+        private readonly int max_resource_name = 13;
+        private readonly string[] gszCompressionType = ["not  compressed", "RLE  compressed", "LZSS compressed"];
+        private readonly string[] supported_extensions = ["", "PCX", "FLC", "WAV"];
+        private readonly uint resource_start_code = 1129468754;
+        private readonly uint end_of_header = 12;
         //private uint size_of_rheader = 36;
 
         private uint file_version;
         private uint directory;
         private uint resources;
-        private HashAlgorithm hash_alg = HashAlgorithm.HashId;
+        private readonly HashAlgorithm hash_alg = HashAlgorithm.HashId;
 
         private DirectoryEntry[] dirEntries = [];
-        private BinaryReader resource_file;
+        private readonly BinaryReader resource_file;
 
         /// <summary>
         /// Load the file header for a resource file and perform some sanity checks.
@@ -73,12 +73,12 @@ namespace ResourceUtilityLib
             resource_file.BaseStream.Position = 0;
 
             file_version = resource_file.ReadUInt32();
-            if( file_version > resutil_version)
+            if (file_version > resutil_version)
             {
                 throw new UnsupportedVersionException();
             }
             directory = resource_file.ReadUInt32();
-            if( directory > resource_file.BaseStream.Length )
+            if (directory > resource_file.BaseStream.Length)
             {
                 throw new IndexOutOfRangeException();
             }
@@ -101,7 +101,7 @@ namespace ResourceUtilityLib
                 DirectoryEntry entry;
                 entry.hash = resource_file.ReadUInt32();
                 entry.offset = resource_file.ReadUInt32();
-                if( entry.offset > resource_file.BaseStream.Length)
+                if (entry.offset > resource_file.BaseStream.Length)
                 {
                     throw new IndexOutOfRangeException();
                 }
@@ -125,7 +125,7 @@ namespace ResourceUtilityLib
             ResourceHeader header;
 
             header.startcode = resource_file.ReadUInt32();
-            if( header.startcode != resource_start_code )
+            if (header.startcode != resource_start_code)
             {
                 throw new InvalidResourceException();
             }
@@ -133,7 +133,7 @@ namespace ResourceUtilityLib
             header.cbChunk = resource_file.ReadUInt32();
             header.cbCompressedData = resource_file.ReadUInt32();
             header.cbUncompressedData = resource_file.ReadUInt32();
-            if( header.cbCompressedData > header.cbUncompressedData )
+            if (header.cbCompressedData > header.cbUncompressedData)
             {
                 throw new InvalidResourceException();
             }
@@ -227,7 +227,9 @@ namespace ResourceUtilityLib
                         ResourceHeader header = LoadResourceHeader(position);
                         strings[i] = String.Format("{0,4} {1,12} {2,6} {3} {4} {5,6}", i, CharArrayToString(header.filename).PadRight(12), header.cbUncompressedData, header.flags, gszCompressionType[header.compressionCode], header.cbCompressedData);
                         position = position + header.cbChunk;
-                    } catch(InvalidResourceException) {
+                    }
+                    catch (InvalidResourceException)
+                    {
                         strings[i] = "Item " + i + " is invalid";
                     }
 
@@ -260,7 +262,7 @@ namespace ResourceUtilityLib
         {
             string filename_str = CharArrayToString(filename);
             uint hash = 0;
-            if( hash_alg == HashAlgorithm.HashCrc )
+            if (hash_alg == HashAlgorithm.HashCrc)
             {
                 hash = HashCalculator.HashCRC(filename_str);
             }
@@ -270,15 +272,15 @@ namespace ResourceUtilityLib
             }
 
             uint position = end_of_header;
-            for ( int i = 0; i < resources; i++ )
+            for (int i = 0; i < resources; i++)
             {
                 ResourceHeader header = LoadResourceHeader(position);
 
-                if( header.hash == hash )
+                if (header.hash == hash)
                 {
                     Console.WriteLine(String.Format("Reading {0} bytes of data.", (int)header.cbCompressedData));
                     byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
-                    if( (int)header.compressionCode == (int)CompressionTypes.NoCompression)
+                    if ((int)header.compressionCode == (int)CompressionTypes.NoCompression)
                     {
                         Console.WriteLine(String.Format("{0} is not compressed. Writing {1} bytes of data.", filename_str, (int)header.cbCompressedData));
                         BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false);

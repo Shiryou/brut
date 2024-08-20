@@ -17,7 +17,7 @@ namespace ResourceUtilityLib
         public static uint HashCRC(string filename)
         {
             string[] parts = filename.Split('\\');
-            string name = parts[parts.Length - 1]+"\0"; // add the NULL byte for compatibility
+            string name = parts[parts.Length - 1] + "\0"; // add the NULL byte for compatibility
 
             uint accumCRC = 0;
             uint accumXOR = 0;
@@ -29,7 +29,7 @@ namespace ResourceUtilityLib
                 {
                     c -= (char)('a' - 'A');
                 }
-                
+
                 accumXOR = accumXOR ^ c;
                 accumCRC = (accumCRC << 6) + ((uint)(c - ' ') & 63);
 
