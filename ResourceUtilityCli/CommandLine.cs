@@ -2,7 +2,8 @@
 
 using ResourceUtilityLib;
 
-enum Operations {
+enum Operations
+{
     NoOp,
     OpAdd,
     OpRemove,
@@ -25,7 +26,16 @@ class ResourceUtilityCli
         string resfile = args[0];
 
         Console.WriteLine("Processing " + resfile);
-        ResourceUtility ru = new ResourceUtility(resfile);
+        ResourceUtility ru;
+        try
+        {
+            ru = new ResourceUtility(resfile);
+        }
+        catch (FileNotFoundException)
+        {
+            Console.WriteLine("Unable to find " + resfile);
+            return;
+        }
 
         Console.WriteLine("Version: " + ru.FileVersion());
         Console.WriteLine("Resources: " + ru.Count());
@@ -43,7 +53,7 @@ class ResourceUtilityCli
                     file_operation = true;
                     break;
                 case 'H':
-                    switch(Char.ToUpper(args[i][1]))
+                    switch (Char.ToUpper(args[i][1]))
                     {
                         case 'C':
                             ru.useCRCHash();
@@ -64,12 +74,12 @@ class ResourceUtilityCli
                     break;
             }
 
-            if( file_operation )
+            if (file_operation)
             {
                 filename = args[++i];
             }
 
-            switch(operation)
+            switch (operation)
             {
                 case Operations.OpExtract:
                     Extract(ru, filename);
