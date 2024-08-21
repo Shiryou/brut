@@ -58,7 +58,7 @@ namespace ResourceUtilityLib
         private uint file_version;
         private uint directory;
         private uint resources;
-        private readonly HashAlgorithm hash_alg = HashAlgorithm.HashId;
+        private HashAlgorithm hash_alg = HashAlgorithm.HashId;
 
         private DirectoryEntry[] dirEntries = [];
         private readonly BinaryReader resource_file;
@@ -110,6 +110,22 @@ namespace ResourceUtilityLib
 
                 dirEntries[i] = entry;
             }
+        }
+
+        /// <summary>
+        /// Set the current hashing algorithm to use CRC.
+        /// </summary>
+        public void useCRCHash()
+        {
+            hash_alg = HashAlgorithm.HashCrc;
+        }
+
+        /// <summary>
+        /// Set the current hashing algorithm to use IDs.
+        /// </summary>
+        public void useIDHash()
+        {
+            hash_alg = HashAlgorithm.HashId;
         }
 
         /// <summary>
@@ -283,18 +299,21 @@ namespace ResourceUtilityLib
                     if ((int)header.compressionCode == (int)CompressionTypes.NoCompression)
                     {
                         Console.WriteLine(String.Format("{0} is not compressed. Writing {1} bytes of data.", filename_str, (int)header.cbCompressedData));
-                        BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false);
-                        save_file.Write(compressed_data);
-                        save_file.Close();
+                        using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
+                        {
+                            save_file.Write(compressed_data);
+                        }
                     }
                     else if ((int)header.compressionCode == (int)CompressionTypes.LZSSCompression)
                     {
                         Console.WriteLine(String.Format("{0} is compressed with LZSS compression, which is not yet supported. {1} bytes of data will NOT be written.", filename_str, (int)header.cbUncompressedData));
                     }
+                    return;
                 }
 
                 position = position + header.cbChunk;
             }
+            throw new FileNotFoundException();
         }
     }
 }
