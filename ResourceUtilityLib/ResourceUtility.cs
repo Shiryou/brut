@@ -320,11 +320,9 @@ namespace ResourceUtilityLib
 
                 if (header.hash == hash)
                 {
-                    Console.WriteLine(String.Format("Reading {0} bytes of data.", (int)header.cbCompressedData));
                     byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
                     if ((CompressionTypes)header.compressionCode == CompressionTypes.NoCompression)
                     {
-                        Console.WriteLine(String.Format("{0} is not compressed. Writing {1} bytes of data.", filename_str, (int)header.cbCompressedData));
                         using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
                         {
                             save_file.Write(compressed_data);
@@ -332,7 +330,10 @@ namespace ResourceUtilityLib
                     }
                     else if ((CompressionTypes)header.compressionCode == CompressionTypes.LZSSCompression)
                     {
-                        Console.WriteLine(String.Format("{0} is compressed with LZSS compression, which is not yet supported. {1} bytes of data will NOT be written.", filename_str, (int)header.cbUncompressedData));
+                        using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
+                        {
+                            save_file.Write(LZSS.Decode(compressed_data, header.cbUncompressedData));
+                        }
                     }
                     return;
                 }
