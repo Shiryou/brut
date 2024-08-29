@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 
 namespace ResourceUtilityLib
 {
@@ -259,6 +260,31 @@ namespace ResourceUtilityLib
                 }
             }
             return strings;
+        }
+        public void ExtractAll()
+        {
+            string[] strings = new string[resources];
+
+            if (file_version != resutil_version)
+            {
+                return;
+            }
+
+            uint position = end_of_header;
+            for (int i = 0; i < resources; i++)
+            {
+                try
+                {
+                    ResourceHeader header = LoadResourceHeader(position);
+                    ExtractFile(header.filename);
+                    position = position + header.cbChunk;
+                }
+                catch (InvalidResourceException)
+                {
+                    strings[i] = "Item " + i + " is invalid";
+                }
+
+            }
         }
 
         /// <summary>

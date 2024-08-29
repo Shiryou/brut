@@ -8,6 +8,7 @@ enum Operations
     OpAdd,
     OpRemove,
     OpExtract,
+    OpExtractAll,
     OpList,
     OpResponseFile,
     OpVerify
@@ -52,6 +53,9 @@ class ResourceUtilityCli
                     operation = Operations.OpExtract;
                     file_operation = true;
                     break;
+                case 'X':
+                    operation = Operations.OpExtractAll;
+                    break;
                 case 'H':
                     switch (Char.ToUpper(args[i][1]))
                     {
@@ -84,6 +88,9 @@ class ResourceUtilityCli
                 case Operations.OpExtract:
                     Extract(ru, filename);
                     break;
+                case Operations.OpExtractAll:
+                    ExtractAll(ru);
+                    break;
                 case Operations.OpList:
                     List(ru);
                     break;
@@ -104,7 +111,6 @@ class ResourceUtilityCli
 
     static void Extract(ResourceUtility ru, string filename)
     {
-        ru.useCRCHash();
         try
         {
             ru.ExtractFile(filename);
@@ -113,5 +119,10 @@ class ResourceUtilityCli
         {
             Console.WriteLine(String.Format("File {0} was not found in the resource file.", filename));
         }
+    }
+
+    static void ExtractAll(ResourceUtility ru)
+    {
+        ru.ExtractAll();
     }
 }
