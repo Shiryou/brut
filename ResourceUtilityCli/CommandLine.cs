@@ -82,22 +82,22 @@ class ResourceUtilityCli
             {
                 filename = args[++i];
             }
+        }
 
-            switch (operation)
-            {
-                case Operations.OpExtract:
-                    Extract(ru, filename);
-                    break;
-                case Operations.OpExtractAll:
-                    ExtractAll(ru);
-                    break;
-                case Operations.OpList:
-                    List(ru);
-                    break;
-                case Operations.OpVerify:
-                    List(ru, true);
-                    break;
-            }
+        switch (operation)
+        {
+            case Operations.OpExtract:
+                Extract(ru, filename);
+                break;
+            case Operations.OpExtractAll:
+                ExtractAll(ru);
+                break;
+            case Operations.OpList:
+                List(ru);
+                break;
+            case Operations.OpVerify:
+                List(ru, true);
+                break;
         }
     }
 
