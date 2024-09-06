@@ -2,12 +2,12 @@
 namespace ResourceUtilityLib
 {
     /// <summary>
-    /// Calculate hashes used to identify files within resource files.
+    /// Calculates hashes used to identify files within resource files.
     /// </summary>
     public class HashCalculator
     {
         /// <summary>
-        /// Calculate a "CRC" hash based on the filename, including the extension.
+        /// Calculates a "CRC" hash based on the filename, including the extension.
         /// </summary>
         /// <remarks>
         /// The original hash function adds a NULL byte to the end of the string, so we do that here for compatibility.
@@ -46,7 +46,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Calculate a hash based on the ID in the filename, not including the extension.
+        /// Calculates a hash based on the ID in the filename, not including the extension.
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
