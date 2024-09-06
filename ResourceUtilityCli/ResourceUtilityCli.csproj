@@ -10,6 +10,7 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishTrimmed>true</PublishTrimmed>
+    <AssemblyName>brut</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
