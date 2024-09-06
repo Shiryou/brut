@@ -24,9 +24,9 @@ jobs:
       uses: ncipollo/release-action@main
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        artifacts: "brut_nightly.exe"
         tag: "nightly"
         commit: ${{ github.ref_name }}
+        body: A build of the most recent compilable commit to the repository. Use at your own risk.
         prerelease: true
         allowUpdates: true
         updateOnlyUnreleased: true
