@@ -90,7 +90,7 @@ public class LZSSDecoder
     /// Initializes the base data structures.
     /// </summary>
     /// <param name="pData">The byte array to compress.</param>
-    public LZSSDecoder (byte[] pData, uint myLength )
+    public LZSSDecoder(byte[] pData, uint myLength)
     {
         pInput = pData;
         uncompressed_length = myLength;

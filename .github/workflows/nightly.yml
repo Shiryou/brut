@@ -20,19 +20,6 @@ jobs:
         git tag -f nightly
         git push -f origin nightly
 
-    - name: Update nightly release
-      uses: ncipollo/release-action@main
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: "nightly"
-        commit: ${{ github.ref_name }}
-        body: A build of the most recent compilable commit to the repository. Use at your own risk.
-        prerelease: true
-        allowUpdates: true
-        updateOnlyUnreleased: true
-        removeArtifacts: false
-        replacesArtifacts: true
-
   build:
     name: Build Release
     needs: create_release
@@ -81,7 +68,9 @@ jobs:
         artifacts: "${{ matrix.artifact_dst }}"
         tag: "nightly"
         commit: ${{ github.ref_name }}
+        body: A build of the most recent compilable commit to the repository. Use at your own risk.
         prerelease: true
         allowUpdates: true
         updateOnlyUnreleased: true
         removeArtifacts: false
+        replacesArtifacts: true
