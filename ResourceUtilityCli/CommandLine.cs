@@ -20,7 +20,12 @@ class ResourceUtilityCli
     {
         if (args.Length < 2)
         {
-            Console.WriteLine("Output help info here.");
+            Console.WriteLine("Usage: brut resfile-name [e sourcefile-name] [hc | hi] | [l] | [v]");
+            Console.WriteLine("   e  extract file (does not remove it)");
+            Console.WriteLine("   hc use CRC hash (default)");
+            Console.WriteLine("   hi use ID hash");
+            Console.WriteLine("   l  list contents of resource file");
+            Console.WriteLine("   v  verify resource file");
             return;
         }
 
@@ -111,9 +116,11 @@ class ResourceUtilityCli
 
     static void Extract(ResourceUtility ru, string filename)
     {
+        Console.Write("Extracting " + filename + "... ");
         try
         {
             ru.ExtractFile(filename);
+            Console.WriteLine("Succeeded!");
         }
         catch (FileNotFoundException)
         {
