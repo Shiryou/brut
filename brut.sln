@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourceUtilityLib", "Resou
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourceUtilityCli", "ResourceUtilityCli\ResourceUtilityCli.csproj", "{CC1158E0-1E58-4A73-9393-C452B2E9FD21}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourceUtilityTest", "ResourceUtilityTest\ResourceUtilityTest.csproj", "{590ABDFE-D700-4256-BC86-9F9154D6BF98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{CC1158E0-1E58-4A73-9393-C452B2E9FD21}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC1158E0-1E58-4A73-9393-C452B2E9FD21}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC1158E0-1E58-4A73-9393-C452B2E9FD21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{590ABDFE-D700-4256-BC86-9F9154D6BF98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{590ABDFE-D700-4256-BC86-9F9154D6BF98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{590ABDFE-D700-4256-BC86-9F9154D6BF98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{590ABDFE-D700-4256-BC86-9F9154D6BF98}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
