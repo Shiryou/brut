@@ -59,7 +59,7 @@ namespace ResourceUtilityLib
         private uint file_version;
         private uint directory;
         private uint resources;
-        private HashAlgorithm hash_alg = HashAlgorithm.HashId;
+        private HashAlgorithm hash_alg = HashAlgorithm.HashCrc;
 
         private DirectoryEntry[] dirEntries = [];
         private readonly BinaryReader resource_file;
