@@ -269,8 +269,6 @@ namespace ResourceUtilityLib
         /// <returns></returns>
         public void ExtractAll()
         {
-            string[] strings = new string[resources];
-
             if (file_version != resutil_version)
             {
                 return;
@@ -279,17 +277,9 @@ namespace ResourceUtilityLib
             uint position = end_of_header;
             for (int i = 0; i < resources; i++)
             {
-                try
-                {
-                    ResourceHeader header = LoadResourceHeader(position);
-                    ExtractFile(header.filename);
-                    position = position + header.cbChunk;
-                }
-                catch (InvalidResourceException)
-                {
-                    strings[i] = "Item " + i + " is invalid";
-                }
-
+                ResourceHeader header = LoadResourceHeader(position);
+                ExtractFile(header.filename);
+                position = position + header.cbChunk;
             }
         }
 
