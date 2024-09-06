@@ -20,8 +20,9 @@ class ResourceUtilityCli
     {
         if (args.Length < 2)
         {
-            Console.WriteLine("Usage: brut resfile-name [e sourcefile-name] [hc | hi] | [l] | [v]");
+            Console.WriteLine("Usage: brut resfile-name [e sourcefile-name | x] [hc | hi] | [l] | [v]");
             Console.WriteLine("   e  extract file (does not remove it)");
+            Console.WriteLine("   x  extract all files (does not remove them)");
             Console.WriteLine("   hc use CRC hash (default)");
             Console.WriteLine("   hi use ID hash");
             Console.WriteLine("   l  list contents of resource file");
@@ -116,15 +117,16 @@ class ResourceUtilityCli
 
     static void Extract(ResourceUtility ru, string filename)
     {
-        Console.Write("Extracting " + filename + "... ");
         try
         {
+            ResourceHeader resource = ru.GetFileInformation(filename);
+            Console.Write(String.Format("Extracting {0} containing {1} bytes... ", filename, resource.cbUncompressedData));
             ru.ExtractFile(filename);
             Console.WriteLine("Succeeded!");
         }
         catch (FileNotFoundException)
         {
-            Console.WriteLine(String.Format("File {0} was not found in the resource file.", filename));
+            Console.WriteLine(String.Format("\nFile {0} was not found in the resource file.", filename));
         }
     }
 

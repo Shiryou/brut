@@ -17,7 +17,7 @@ namespace ResourceUtilityLib
     }
 
     /// <summary>
-    /// Structure describing a directory entry in the resource file.
+    /// Describes a directory entry in the resource file.
     /// </summary>
     public struct DirectoryEntry
     {
@@ -28,7 +28,7 @@ namespace ResourceUtilityLib
     }
 
     /// <summary>
-    /// Structure describing the header of a resource within the resource file.
+    /// Describes the header of a resource within the resource file.
     /// </summary>
     public struct ResourceHeader
     {
@@ -44,7 +44,7 @@ namespace ResourceUtilityLib
     }
 
     /// <summary>
-    /// Class <c>ResourceUtility</c> manages a resource file.
+    /// Manages a resource file.
     /// </summary>
     public class ResourceUtility
     {
@@ -65,7 +65,7 @@ namespace ResourceUtilityLib
         private readonly BinaryReader resource_file;
 
         /// <summary>
-        /// Load the file header for a resource file and perform some sanity checks.
+        /// Loads the file header for a resource file and perform some sanity checks.
         /// </summary>
         /// <exception cref="UnsupportedVersionException"></exception>
         /// <exception cref="IndexOutOfRangeException"></exception>
@@ -88,7 +88,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Load the file index from the end of a resource file and perform some sanity checks.
+        /// Loads the file index from the end of a resource file and performs some sanity checks.
         /// </summary>
         /// <exception cref="IndexOutOfRangeException"></exception>
         public void LoadDirectory()
@@ -114,7 +114,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Set the current hashing algorithm to use CRC.
+        /// Sets the current hashing algorithm to use CRC.
         /// </summary>
         public void useCRCHash()
         {
@@ -122,7 +122,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Set the current hashing algorithm to use IDs.
+        /// Sets the current hashing algorithm to use IDs.
         /// </summary>
         public void useIDHash()
         {
@@ -130,7 +130,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Load the header for a resource contained withint a resource file and perform some sanity checks.
+        /// Loads the header for a resource contained in a resource file and performs some sanity checks.
         /// </summary>
         /// <param name="offset"></param>
         /// <returns></returns>
@@ -164,7 +164,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Convert a character array to a string to simplify using it.
+        /// Converts a character array to a string to simplify using it.
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
@@ -174,7 +174,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Convert a string to a character array with null padding for writing to a resource file.
+        /// Converts a string to a character array with null padding for writing to a resource file.
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
@@ -184,7 +184,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Get the resource file version as an integer.
+        /// Gets the resource file version as an integer.
         /// </summary>
         /// <returns></returns>
         public uint FileVersion()
@@ -193,7 +193,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Get the number of resources contained in a resource file.
+        /// Gets the number of resources contained in a resource file.
         /// </summary>
         /// <returns></returns>
         public uint Count()
@@ -202,7 +202,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// The constructor loads the file and checks the file header and file index.
+        /// Loads the file and checks the file header and file index.
         /// </summary>
         /// <param name="filePath"></param>
         public ResourceUtility(string filePath)
@@ -221,7 +221,7 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// List the files within the resource file in fast or detailed modes.
+        /// Lists the files within the resource file in fast or detailed modes.
         /// </summary>
         /// <param name="verify"></param>
         /// <returns></returns>
@@ -261,6 +261,12 @@ namespace ResourceUtilityLib
             }
             return strings;
         }
+
+        /// <summary>
+        /// Extracts all files in the resource file.
+        /// </summary>
+        /// <param name="verify"></param>
+        /// <returns></returns>
         public void ExtractAll()
         {
             string[] strings = new string[resources];
@@ -288,19 +294,21 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Extract a file from the resource file.
+        /// Gets the file header for a resource.
         /// </summary>
-        /// <param name="filename"></param>
-        public void ExtractFile(string filename)
+        /// <param name="filename">The filename</param>
+        /// <returns>The resource header containing pertinent file information.</returns>
+        public ResourceHeader GetFileInformation(string filename)
         {
-            ExtractFile(StringToCharArray(filename));
+            return GetFileInformation(StringToCharArray(filename));
         }
 
         /// <summary>
-        /// Extract a file from the resource file.
+        /// Gets the file header for a resource.
         /// </summary>
-        /// <param name="filename"></param>
-        public void ExtractFile(char[] filename)
+        /// <param name="filename">The filename</param>
+        /// <returns>The resource header containing pertinent file information.</returns>
+        public ResourceHeader GetFileInformation(char[] filename)
         {
             string filename_str = CharArrayToString(filename);
             uint hash = 0;
@@ -320,27 +328,94 @@ namespace ResourceUtilityLib
 
                 if (header.hash == hash)
                 {
-                    byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
-                    if ((CompressionTypes)header.compressionCode == CompressionTypes.NoCompression)
-                    {
-                        using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
-                        {
-                            save_file.Write(compressed_data);
-                        }
-                    }
-                    else if ((CompressionTypes)header.compressionCode == CompressionTypes.LZSSCompression)
-                    {
-                        using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
-                        {
-                            save_file.Write(LZSS.Decode(compressed_data, header.cbUncompressedData));
-                        }
-                    }
-                    return;
+                    return header;
                 }
 
                 position = position + header.cbChunk;
             }
             throw new FileNotFoundException();
+        }
+
+        /// <summary>
+        /// Gets the file offset for a resource.
+        /// </summary>
+        /// <param name="filename">The filename</param>
+        /// <returns>The offset for the file.</returns>
+        public uint GetFileOffset(string filename)
+        {
+            return GetFileOffset(StringToCharArray(filename));
+        }
+
+        /// <summary>
+        /// Gets the file offset for a resource.
+        /// </summary>
+        /// <param name="filename">The filename</param>
+        /// <returns>The offset for the file.</returns>
+        public uint GetFileOffset(char[] filename)
+        {
+            for (int i = 0; i < resources; i++)
+            {
+                if (filename == dirEntries[i].filename)
+                {
+                    return dirEntries[i].offset;
+                }
+            }
+            throw new FileNotFoundException();
+        }
+
+        /// <summary>
+        /// Extracts a file from the resource file based on the filename.
+        /// </summary>
+        /// <param name="filename"></param>
+        public void ExtractFile(string filename)
+        {
+            ExtractFile(StringToCharArray(filename));
+        }
+
+        /// <summary>
+        /// Extracts a file from the resource file based on the file name.
+        /// </summary>
+        /// <param name="filename"></param>
+        public void ExtractFile(char[] filename)
+        {
+            ExtractFile(GetFileInformation(filename));
+        }
+
+        /// <summary>
+        /// Extracts a file from the resource file based on the file offset.
+        /// </summary>
+        /// <param name="offset"></param>
+        public void ExtractFile(uint offset)
+        {
+            ExtractFile(LoadResourceHeader(offset));
+
+        }
+
+        /// <summary>
+        /// Extracts a file from the resource file based on the file header.
+        /// </summary>
+        /// <remarks>This function requires that the offset in the resource file already be set.
+        /// i.e., it must be run after LoadResourceHeader and before anything changes the offset. This generally shouldn't be an issue.</remarks>
+        /// <param name="header"></param>
+        private void ExtractFile(ResourceHeader header)
+        {
+            string filename_str = CharArrayToString(header.filename);
+            byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
+            if ((CompressionTypes)header.compressionCode == CompressionTypes.NoCompression)
+            {
+                using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
+                {
+                    save_file.Write(compressed_data);
+                }
+            }
+            else if ((CompressionTypes)header.compressionCode == CompressionTypes.LZSSCompression)
+            {
+                using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
+                {
+                    save_file.Write(LZSS.Decode(compressed_data, header.cbUncompressedData));
+                }
+            }
+            return;
         }
     }
 }
