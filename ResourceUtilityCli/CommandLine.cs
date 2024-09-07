@@ -20,13 +20,23 @@ class ResourceUtilityCli
     {
         if (args.Length < 2)
         {
-            Console.WriteLine("Usage: brut resfile-name [e sourcefile-name | x] [hc | hi] | [l] | [v]");
+            Console.WriteLine("Usage: resutil resfile-name [[s nnnnn] [c] [n] [r] [u] [+|-|e sourcefile-name ]] |");
+            Console.WriteLine(" [@ respfile-name] | [l] | [v]");
+            Console.WriteLine("   +  add file");
+            Console.WriteLine("   - remove file");
+            Console.WriteLine("   c  compress resources (default)");
             Console.WriteLine("   e  extract file (does not remove it)");
             Console.WriteLine("   x  extract all files (does not remove them)");
             Console.WriteLine("   hc use CRC hash (default)");
             Console.WriteLine("   hi use ID hash");
             Console.WriteLine("   l  list contents of resource file");
+            Console.WriteLine("   n  do not rotate PCX resources (default)");
+            Console.WriteLine("   r  rotate PCX resources");
+            Console.WriteLine("   s  nnnnn max size of resource permitted");
+            Console.WriteLine("   u  do not compress resources");
             Console.WriteLine("   v  verify resource file");
+            Console.WriteLine("   @  respfile run commands in respfile");
+            Console.WriteLine("Note: Compression and rotation are not yet supported when adding a file.");
             return;
         }
 
@@ -55,6 +65,10 @@ class ResourceUtilityCli
 
             switch (Char.ToUpper(args[i][0]))
             {
+                case '+':
+                    operation = Operations.OpAdd;
+                    file_operation = true;
+                    break;
                 case 'E':
                     operation = Operations.OpExtract;
                     file_operation = true;
@@ -66,10 +80,10 @@ class ResourceUtilityCli
                     switch (Char.ToUpper(args[i][1]))
                     {
                         case 'C':
-                            ru.useCRCHash();
+                            ru.UseCRCHash();
                             break;
                         case 'I':
-                            ru.useIDHash();
+                            ru.UseIDHash();
                             break;
                         default:
                             Console.WriteLine("Invalid hashing algorithm.");
@@ -82,6 +96,23 @@ class ResourceUtilityCli
                 case 'V':
                     operation = Operations.OpVerify;
                     break;
+
+                case 'C':
+                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
+                    ru.EnableCompression();
+                    break;
+                case 'U':
+                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
+                    ru.DisableCompression();
+                    break;
+                case 'R':
+                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
+                    ru.EnablePCXRotation();
+                    break;
+                case 'N':
+                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
+                    ru.DisablePCXRotation();
+                    break;
             }
 
             if (file_operation)
@@ -92,6 +123,9 @@ class ResourceUtilityCli
 
         switch (operation)
         {
+            case Operations.OpAdd:
+                Add(ru, filename);
+                break;
             case Operations.OpExtract:
                 Extract(ru, filename);
                 break;
@@ -105,6 +139,8 @@ class ResourceUtilityCli
                 List(ru, true);
                 break;
         }
+
+        //TODO:check if file is empty and delete if so.
     }
 
     static void List(ResourceUtility ru, bool verify = false)
@@ -113,6 +149,11 @@ class ResourceUtilityCli
         {
             Console.WriteLine(str);
         }
+    }
+
+    static void Add(ResourceUtility ru, string filename)
+    {
+        ru.AddFiles(filename);
     }
 
     static void Extract(ResourceUtility ru, string filename)

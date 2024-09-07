@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Text;
+﻿using System.Text;
 
 namespace ResourceUtilityLib
 {
@@ -50,11 +49,15 @@ namespace ResourceUtilityLib
     {
         private readonly Int32 resutil_version = 0x00000400;
         private readonly int max_resource_name = 13;
-        private readonly string[] gszCompressionType = ["not  compressed", "RLE  compressed", "LZSS compressed"];
+        private readonly string[] compression_type = ["not  compressed", "RLE  compressed", "LZSS compressed"];
         private readonly string[] supported_extensions = ["", "PCX", "FLC", "WAV"];
-        private readonly uint resource_start_code = 1129468754;
+        private readonly uint resource_start_code = 1129468754; // "RSRC"
+        private readonly uint max_resource_size = 0x7FFFFFFF;
         private readonly uint end_of_header = 12;
-        //private uint size_of_rheader = 36;
+        private readonly uint size_of_rheader = 36;
+
+        private bool compress = true;
+        private bool rotate = false;
 
         private uint file_version;
         private uint directory;
@@ -65,7 +68,7 @@ namespace ResourceUtilityLib
         private readonly BinaryReader resource_file;
 
         /// <summary>
-        /// Loads the file header for a resource file and perform some sanity checks.
+        /// Loads the file header for a resource file and performs some sanity checks.
         /// </summary>
         /// <exception cref="UnsupportedVersionException"></exception>
         /// <exception cref="IndexOutOfRangeException"></exception>
@@ -88,12 +91,24 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
+        /// Saves the file header for a resource file.
+        /// </summary>
+        public void SaveFileHeader()
+        {
+            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            resfile.BaseStream.Position = 0;
+            resfile.Write((UInt32)file_version);
+            resfile.Write((UInt32)directory);
+            resfile.Write((UInt32)resources);
+            resfile.Flush();
+        }
+
+        /// <summary>
         /// Loads the file index from the end of a resource file and performs some sanity checks.
         /// </summary>
         /// <exception cref="IndexOutOfRangeException"></exception>
         public void LoadDirectory()
         {
-            long original_position = resource_file.BaseStream.Position;
             resource_file.BaseStream.Position = directory;
 
             dirEntries = new DirectoryEntry[resources];
@@ -114,9 +129,44 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
+        /// Saves the file index from the end of a resource file.
+        /// </summary>
+        public void SaveDirectory()
+        {
+            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            resfile.BaseStream.Position = directory;
+            for (int i = 0; i < resources; i++)
+            {
+                resfile.Write((UInt32)dirEntries[i].hash);
+                resfile.Write((UInt32)dirEntries[i].offset);
+                resfile.Write((byte)dirEntries[i].extension);
+                resfile.Write(dirEntries[i].filename);
+            }
+            resfile.Flush();
+        }
+
+        /// <summary>
+        /// Adds a new directory entry to the list.
+        /// </summary>
+        /// <param name="header">The metadata for the resource to be added.</param
+        public void AddDirectoryEntry(ResourceHeader header)
+        {
+            Array.Resize<DirectoryEntry>(ref dirEntries, (int)resources + 1);
+
+            dirEntries[(int)resources] = new DirectoryEntry();
+            dirEntries[(int)resources].hash = header.hash;
+            dirEntries[(int)resources].extension = header.extension;
+            dirEntries[(int)resources].filename = header.filename;
+            dirEntries[(int)resources].offset = directory;
+
+            resources++;
+            directory += header.cbChunk;
+        }
+
+        /// <summary>
         /// Sets the current hashing algorithm to use CRC.
         /// </summary>
-        public void useCRCHash()
+        public void UseCRCHash()
         {
             hash_alg = HashAlgorithm.HashCrc;
         }
@@ -124,9 +174,41 @@ namespace ResourceUtilityLib
         /// <summary>
         /// Sets the current hashing algorithm to use IDs.
         /// </summary>
-        public void useIDHash()
+        public void UseIDHash()
         {
             hash_alg = HashAlgorithm.HashId;
+        }
+
+        /// <summary>
+        /// Enables compressing files.
+        /// </summary>
+        public void EnableCompression()
+        {
+            compress = true;
+        }
+
+        /// <summary>
+        /// Disables compressing files.
+        /// </summary>
+        public void DisableCompression()
+        {
+            compress = false;
+        }
+
+        /// <summary>
+        /// Enables rotating PCX files.
+        /// </summary>
+        public void EnablePCXRotation()
+        {
+            rotate = true;
+        }
+
+        /// <summary>
+        /// Disables rotating PCX files.
+        /// </summary>
+        public void DisablePCXRotation()
+        {
+            rotate = false;
         }
 
         /// <summary>
@@ -161,6 +243,30 @@ namespace ResourceUtilityLib
             header.filename = resource_file.ReadChars(max_resource_name);
 
             return header;
+        }
+
+        /// <summary>
+        /// Saves a resource metadata to the resource file.
+        /// </summary>
+        /// <param name="header">The metadata to write.</param>
+        /// <param name="offset">The offset in the resource file to write at.</param>
+        /// <returns></returns>
+        public void SaveResourceHeader(ResourceHeader header, uint offset)
+        {
+            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            resfile.BaseStream.Position = offset;
+
+            resfile.Write((UInt32)header.startcode);
+            resfile.Write((UInt32)header.cbChunk);
+            resfile.Write((UInt32)header.cbCompressedData);
+            resfile.Write((UInt32)header.cbUncompressedData);
+            resfile.Write((UInt32)header.hash);
+            resfile.Write((byte)header.flags);
+            resfile.Write((byte)header.compressionCode);
+            resfile.Write((byte)header.extension);
+            resfile.Write(header.filename);
+
+            resfile.Flush();
         }
 
         /// <summary>
@@ -207,16 +313,15 @@ namespace ResourceUtilityLib
         /// <param name="filePath"></param>
         public ResourceUtility(string filePath)
         {
-            if (File.Exists(filePath))
-            {
-                resource_file = new BinaryReader(File.Open(filePath, FileMode.Open), Encoding.UTF8, false);
+            file_version = (uint)resutil_version;
+            directory = end_of_header;
+            resources = 0;
+            resource_file = new BinaryReader(File.Open(filePath, FileMode.OpenOrCreate), Encoding.UTF8, false);
 
+            if (resource_file.BaseStream.Length > 0)
+            {
                 LoadFileHeader();
                 LoadDirectory();
-            }
-            else
-            {
-                throw new FileNotFoundException();
             }
         }
 
@@ -242,7 +347,7 @@ namespace ResourceUtilityLib
                     try
                     {
                         ResourceHeader header = LoadResourceHeader(position);
-                        strings[i] = String.Format("{0,4} {1,12} {2,6} {3} {4} {5,6}", i, CharArrayToString(header.filename).PadRight(12), header.cbUncompressedData, header.flags, gszCompressionType[header.compressionCode], header.cbCompressedData);
+                        strings[i] = String.Format("{0,4} {1,12} {2,6} {3} {4} {5,6}", i, CharArrayToString(header.filename).PadRight(12), header.cbUncompressedData, header.flags, compression_type[header.compressionCode], header.cbCompressedData);
                         position = position + header.cbChunk;
                     }
                     catch (InvalidResourceException)
@@ -253,13 +358,91 @@ namespace ResourceUtilityLib
                 }
             }
             else
-            {// Method 2
+            {
                 for (int i = 0; i < resources; i++)
                 {
                     strings[i] = String.Format("{0,4} {1,12} {2,6}", i, CharArrayToString(dirEntries[i].filename).PadRight(12), dirEntries[i].offset);
                 }
             }
             return strings;
+        }
+
+        /// <summary>
+        /// Add a file to the resource file.
+        /// </summary>
+        /// <param name="file">The file path to add.</param>
+        public void AddFile(string file)
+        {
+            ResourceHeader header = new ResourceHeader();
+            string filename = Path.GetFileName(file).ToUpper();
+            string extension = Path.GetExtension(filename)[1..];
+            BinaryReader read_file = new BinaryReader(File.Open(file, FileMode.Open), Encoding.UTF8, false);
+
+            header.flags = 0;
+            header.cbUncompressedData = (uint)read_file.BaseStream.Length;
+            header.extension = (byte)Array.IndexOf(supported_extensions, extension);
+            header.startcode = resource_start_code;
+
+            if (header.cbUncompressedData > max_resource_size)
+            {
+                throw new Exception(String.Format("File size ({0}) is greater than max ({1}): not adding to file", header.cbUncompressedData, max_resource_size));
+            }
+
+            if (filename.Length > max_resource_name)
+            {
+                header.filename = StringToCharArray(filename[..max_resource_name]);
+            }
+            else
+            {
+                header.filename = StringToCharArray(filename);
+            }
+
+            if (hash_alg == HashAlgorithm.HashCrc)
+            {
+                header.hash = HashCalculator.HashCRC(filename);
+            }
+            else
+            {
+                header.hash = HashCalculator.HashID(filename);
+                header.flags |= 16;
+            }
+
+            byte[] uncompressed_data = read_file.ReadBytes((int)read_file.BaseStream.Length);
+
+            // Handle PCX decompression and rotation.
+            // Handle LZSS compression.
+
+            header.compressionCode = (byte)CompressionTypes.NoCompression;
+            header.cbCompressedData = header.cbUncompressedData;
+            header.cbChunk = size_of_rheader + header.cbCompressedData;
+
+            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            SaveResourceHeader(header, directory);
+            resfile.Write(uncompressed_data);
+            resfile.Flush();
+            AddDirectoryEntry(header);
+        }
+
+        /// <summary>
+        /// Add one or more files to the resource file based on a file pattern.
+        /// </summary>
+        /// <param name="file">The file pattern of the files to add.</param>
+        public void AddFiles(string file_pattern)
+        {
+            string[] fileEntries = Directory.GetFiles(Path.GetDirectoryName(file_pattern) ?? ".", Path.GetFileName(file_pattern));
+
+            if (fileEntries.Length == 0)
+            {
+                throw new FileNotFoundException();
+            }
+
+            foreach (string file in fileEntries)
+            {
+                AddFile(file);
+            }
+
+            SaveFileHeader();
+            SaveDirectory();
         }
 
         /// <summary>
@@ -396,6 +579,7 @@ namespace ResourceUtilityLib
                 using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
                 {
                     save_file.Write(compressed_data);
+                    save_file.Flush();
                 }
             }
             else if ((CompressionTypes)header.compressionCode == CompressionTypes.LZSSCompression)
@@ -403,6 +587,7 @@ namespace ResourceUtilityLib
                 using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
                 {
                     save_file.Write(LZSS.Decode(compressed_data, header.cbUncompressedData));
+                    save_file.Flush();
                 }
             }
             return;
