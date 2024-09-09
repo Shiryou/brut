@@ -409,6 +409,16 @@ namespace ResourceUtilityLib
 
             byte[] uncompressed_data = read_file.ReadBytes((int)read_file.BaseStream.Length);
 
+            if (supported_extensions[header.extension] == "PCX")
+            {
+                uncompressed_data = PCXHandler.ConvertToBitmap(uncompressed_data, rotate);
+                header.cbUncompressedData = (uint)uncompressed_data.Length;
+                header.flags |= 1;
+                if (rotate)
+                {
+                    header.flags |= 2;
+                }
+            }
             // Handle PCX decompression and rotation.
             // Handle LZSS compression.
 
