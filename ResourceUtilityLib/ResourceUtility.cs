@@ -47,10 +47,11 @@ namespace ResourceUtilityLib
     /// </summary>
     public class ResourceUtility
     {
+        private static readonly int max_resource_name = 13;
+        private static readonly string[] compression_type = ["not  compressed", "RLE  compressed", "LZSS compressed"];
+        private static readonly string[] supported_extensions = ["", "PCX", "FLC", "WAV"];
+
         private readonly Int32 resutil_version = 0x00000400;
-        private readonly int max_resource_name = 13;
-        private readonly string[] compression_type = ["not  compressed", "RLE  compressed", "LZSS compressed"];
-        private readonly string[] supported_extensions = ["", "PCX", "FLC", "WAV"];
         private readonly uint resource_start_code = 1129468754; // "RSRC"
         private readonly uint max_resource_size = 0x7FFFFFFF;
         private readonly uint end_of_header = 12;
@@ -274,7 +275,7 @@ namespace ResourceUtilityLib
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public string CharArrayToString(char[] str)
+        public static string CharArrayToString(char[] str)
         {
             return (new string(str, 0, str.Length)).Replace("\0", "");
         }
@@ -284,7 +285,7 @@ namespace ResourceUtilityLib
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
-        public char[] StringToCharArray(string str)
+        public static char[] StringToCharArray(string str)
         {
             return str.PadRight(max_resource_name, '\0').ToCharArray();
         }
@@ -330,9 +331,9 @@ namespace ResourceUtilityLib
         /// </summary>
         /// <param name="verify"></param>
         /// <returns></returns>
-        public string[] ListContents(bool verify = false)
+        public ResourceHeader[] ListContents(bool verify = false)
         {
-            string[] strings = new string[resources];
+            ResourceHeader[] headers = new ResourceHeader[resources];
             if (verify)
             {
 
@@ -346,13 +347,15 @@ namespace ResourceUtilityLib
                 {
                     try
                     {
-                        ResourceHeader header = LoadResourceHeader(position);
-                        strings[i] = String.Format("{0,4} {1,12} {2,6} {3} {4} {5,6}", i, CharArrayToString(header.filename).PadRight(12), header.cbUncompressedData, header.flags, compression_type[header.compressionCode], header.cbCompressedData);
-                        position = position + header.cbChunk;
+                        headers[i] = LoadResourceHeader(position);
+                        position = position + headers[i].cbChunk;
                     }
                     catch (InvalidResourceException)
                     {
-                        strings[i] = "Item " + i + " is invalid";
+                        headers[i] = new ResourceHeader
+                        {
+                            filename = StringToCharArray("Item " + i + " is invalid")
+                        };
                     }
 
                 }
@@ -361,10 +364,14 @@ namespace ResourceUtilityLib
             {
                 for (int i = 0; i < resources; i++)
                 {
-                    strings[i] = String.Format("{0,4} {1,12} {2,6}", i, CharArrayToString(dirEntries[i].filename).PadRight(12), dirEntries[i].offset);
+                    headers[i] = new ResourceHeader
+                    {
+                        filename = dirEntries[i].filename,
+                        cbChunk = dirEntries[i].offset
+                    };
                 }
             }
-            return strings;
+            return headers;
         }
 
         /// <summary>
@@ -601,6 +608,16 @@ namespace ResourceUtilityLib
                 }
             }
             return;
+        }
+
+        public static string[] GetSupportedExtensions()
+        {
+            return supported_extensions;
+        }
+
+        public static string[] GetCompressionTypes()
+        {
+            return compression_type;
         }
     }
 }

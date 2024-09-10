@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 
 using ResourceUtilityLib;
 
@@ -143,9 +144,17 @@ class ResourceUtilityCli
 
     static void List(ResourceUtility ru, bool verify = false)
     {
-        foreach (string str in ru.ListContents(verify))
+        ResourceHeader[] headers = ru.ListContents(verify);
+        for (int i = 0; i < headers.Length; i++)
         {
-            Console.WriteLine(str);
+            if (verify)
+            {
+                Console.WriteLine(String.Format("{0,4} {1,12} {2,6} {3} {4} {5,6}", i, ResourceUtility.CharArrayToString(headers[i].filename).PadRight(12), headers[i].cbUncompressedData, headers[i].flags, ResourceUtility.GetCompressionTypes()[headers[i].compressionCode], headers[i].cbCompressedData));
+            }
+            else
+            {
+                Console.WriteLine(String.Format("{0,4} {1,12} {2,6}", i, ResourceUtility.CharArrayToString(headers[i].filename).PadRight(12), headers[i].cbChunk));
+            }
         }
     }
 

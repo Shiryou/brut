@@ -165,7 +165,7 @@ namespace ResourceUtilityLib
                         c = data.ReadByte();
 
                         w += run_length;
-                        while(run_length-- > 0)
+                        while (run_length-- > 0)
                         {
                             output.BaseStream.Position = (long)(loc + l);
                             output.Write(c);
