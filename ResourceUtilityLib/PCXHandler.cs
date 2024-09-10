@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 
 namespace ResourceUtilityLib
 {
@@ -144,9 +145,59 @@ namespace ResourceUtilityLib
         /// </summary>
         private void Rotate()
         {
+            PCXHeader new_header = header;
             data.BaseStream.Position = pcx_reserved;
-            output.BaseStream.Position = bitmap_header_length;
-            throw new Exception("PCX rotation is not yet implemented.");
+
+            ulong l, w;
+            ulong ll = (ulong)(header.LineLength * header.Height);
+
+            for (ushort j = 0; j < new_header.Height; j++)
+            {
+                uint loc = bitmap_header_length + j;
+                w = l = 0;
+                do
+                {
+                    byte c = data.ReadByte();
+
+                    if ((c & 0xC0) == 0xC0)
+                    {
+                        ushort run_length = (ushort)(c & 0x3F);
+                        c = data.ReadByte();
+
+                        w += run_length;
+                        while(run_length-- > 0)
+                        {
+                            output.BaseStream.Position = (long)(loc + l);
+                            output.Write(c);
+                            l += (ulong)new_header.Height;
+                        }
+                    }
+                    else
+                    {
+                        output.BaseStream.Position = (long)(loc + l);
+                        output.Write(c);
+                        l += (ulong)new_header.Height;
+                        w++;
+                    }
+                }
+                while (l < ll);
+                if (new_header.Width < new_header.LineLength)
+                {
+                    output.BaseStream.Position = (long)(loc + l - (ulong)new_header.Height);
+                    output.Write((byte)0);
+                }
+            }
+
+            new_header.Width = new_header.Height;
+            new_header.Height = (short)new_header.LineLength;
+            bitmap_header = new()
+            {
+                Width = new_header.Width,
+                Height = (ushort)new_header.Height,
+                Scale = 5,
+                CenterPoint = 0,
+                Type = 0x000B
+            };
         }
 
         /// <summary>

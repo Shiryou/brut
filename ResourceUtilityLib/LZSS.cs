@@ -56,7 +56,7 @@ public class LZSSEncoder
 
     public byte[] Encode()
     {
-        return pOutput;
+        return pInput;
     }
 
 }

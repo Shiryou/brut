@@ -36,7 +36,7 @@ class ResourceUtilityCli
             Console.WriteLine("   u  do not compress resources");
             Console.WriteLine("   v  verify resource file");
             Console.WriteLine("   @  respfile run commands in respfile");
-            Console.WriteLine("Note: Compression and rotation are not yet supported when adding a file.");
+            Console.WriteLine("Note: Compression is not yet supported when adding a file.");
             return;
         }
 
@@ -86,7 +86,7 @@ class ResourceUtilityCli
                             ru.UseIDHash();
                             break;
                         default:
-                            Console.WriteLine("Invalid hashing algorithm.");
+                            Console.WriteLine("Invalid hashing algorithm. Using default.");
                             break;
                     }
                     break;
@@ -98,19 +98,17 @@ class ResourceUtilityCli
                     break;
 
                 case 'C':
-                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
+                    Console.WriteLine("Compression is not yet supported when adding a file.");
                     ru.EnableCompression();
                     break;
                 case 'U':
-                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
+                    Console.WriteLine("Compression is not yet supported when adding a file.");
                     ru.DisableCompression();
                     break;
                 case 'R':
-                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
                     ru.EnablePCXRotation();
                     break;
                 case 'N':
-                    Console.WriteLine("Compression and rotation are not yet supported when adding a file.");
                     ru.DisablePCXRotation();
                     break;
             }
