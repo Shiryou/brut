@@ -28,15 +28,15 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            artifact_src: ./ResourceUtilityCli/bin/Release/net8.0/linux-x64/publish/brut
-            artifact_dst: ./brut-ubuntu
+            artifact_src: ./brut-cli/bin/Release/net8.0/linux-x64/publish/brut-cli
+            artifact_dst: ./brut-cli-ubuntu
           - os: macos-latest
-            artifact_src: ./ResourceUtilityCli/bin/Release/net8.0/osx-arm64/publish/brut
-            artifact_dst: ./brut-mac
+            artifact_src: ./brut-cli/bin/Release/net8.0/osx-arm64/publish/brut-cli
+            artifact_dst: ./brut-cli-mac
             extension: 
           - os: windows-latest
-            artifact_src: .\ResourceUtilityCli\bin\Release\net8.0\win-x64\publish\brut.exe
-            artifact_dst: .\brut-win.exe
+            artifact_src: .\brut-cli\bin\Release\net8.0\win-x64\publish\brut-cli.exe
+            artifact_dst: .\brut-cli-win.exe
     runs-on: ${{ matrix.os }}
 
     steps:

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ResourceUtilityLib\ResourceUtilityLib.csproj" />
+    <ProjectReference Include="..\brut-lib\brut-lib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
