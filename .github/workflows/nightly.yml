@@ -28,15 +28,21 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            artifact_src: ./brut-cli/bin/Release/net8.0/linux-x64/publish/brut-cli
-            artifact_dst: ./brut-cli-ubuntu
+            cli_src: ./brut-cli/bin/Release/net8.0/linux-x64/publish/brut-cli
+            gui_src: ./brut-gui/bin/Gtk/Release/net8.0/linux-x64/publish
+            cli_dst: ./brut-cli-ubuntu
+            gui_dst: ./brut-gui-ubuntu.gz
           - os: macos-latest
-            artifact_src: ./brut-cli/bin/Release/net8.0/osx-arm64/publish/brut-cli
-            artifact_dst: ./brut-cli-mac
+            cli_src: ./brut-cli/bin/Release/net8.0/osx-arm64/publish/brut-cli
+            gui_src: ./brut-gui/bin/Mac64/Release/net8.0/brut-gui.dmg
+            cli_dst: ./brut-cli-mac
+            gui_dst: ./brut-gui-mac.dmg
             extension: 
           - os: windows-latest
-            artifact_src: .\brut-cli\bin\Release\net8.0\win-x64\publish\brut-cli.exe
-            artifact_dst: .\brut-cli-win.exe
+            cli_src: .\brut-cli\bin\Release\net8.0\win-x64\publish\brut-cli.exe
+            gui_src: .\brut-gui\bin\Wpf\Release\net8.0-windows\publish\
+            cli_dst: .\brut-cli-win.exe
+            gui_dst: .\brut-gui-win.zip
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -54,18 +60,28 @@ jobs:
     - name: Publish
       run: dotnet publish --configuration Release --no-build
 
-    - name: Move artifact
+    - name: Move CLI artifact
       if: matrix.os != 'windows-latest'
-      run: mv "${{ matrix.artifact_src }}" "${{ matrix.artifact_dst }}"
-    - name: Move artifact
+      run: mv "${{ matrix.cli_src }}" "${{ matrix.cli_dst }}"
+    - name: Move CLI artifact
       if: matrix.os == 'windows-latest'
-      run: Move-Item -Path "${{ matrix.artifact_src }}" -Destination "${{ matrix.artifact_dst }}" -Force
+      run: Move-Item -Path "${{ matrix.cli_src }}" -Destination "${{ matrix.cli_dst }}" -Force
+
+    - name: Build GUI artifact
+      if: matrix.os == 'ubuntu-latest'
+      run: tar -C ${{ matrix.gui_src }} -zcvf ${{ matrix.gui_dst }} .
+    - name: Build GUI artifact
+      if: matrix.os == 'macos-latest'
+      run: mv "${{ matrix.gui_src }}" "${{ matrix.gui_dst }}"
+    - name: Build GUI artifact
+      if: matrix.os == 'windows-latest'
+      run: powershell Compress-Archive -Path '${{ matrix.gui_src }}\*' -DestinationPath '${{ matrix.gui_dst }}' -Force
 
     - name: Update nightly release
       uses: ncipollo/release-action@main
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        artifacts: "${{ matrix.artifact_dst }}"
+        artifacts: "${{ matrix.cli_dst }},${{ matrix.gui_dst }}"
         tag: "nightly"
         commit: ${{ github.ref_name }}
         body: A build of the most recent compilable commit to the repository. Use at your own risk.
