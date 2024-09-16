@@ -2,7 +2,7 @@
 
 namespace ResourceUtilityLib
 {
-    enum HashAlgorithm
+    public enum HashAlgorithm
     {
         HashCrc,
         HashId
@@ -45,7 +45,7 @@ namespace ResourceUtilityLib
     /// <summary>
     /// Manages a resource file.
     /// </summary>
-    public class ResourceUtility
+    public class ResourceUtility : IDisposable
     {
         private static readonly int max_resource_name = 13;
         private static readonly string[] compression_type = ["not  compressed", "RLE  compressed", "LZSS compressed"];
@@ -178,6 +178,14 @@ namespace ResourceUtilityLib
         public void UseIDHash()
         {
             hash_alg = HashAlgorithm.HashId;
+        }
+
+        /// <summary>
+        /// Sets the current hashing algorithm to use IDs.
+        /// </summary>
+        public HashAlgorithm GetHashType()
+        {
+            return hash_alg;
         }
 
         /// <summary>
@@ -566,7 +574,7 @@ namespace ResourceUtilityLib
         {
             for (int i = 0; i < resources; i++)
             {
-                if (filename == dirEntries[i].filename)
+                if (filename.SequenceEqual(dirEntries[i].filename))
                 {
                     return dirEntries[i].offset;
                 }
@@ -620,6 +628,7 @@ namespace ResourceUtilityLib
         /// <returns>The resource's data.</returns>
         public byte[] GetResourceData(ResourceHeader header)
         {
+            resource_file.BaseStream.Position = GetFileOffset(header.filename) + size_of_rheader;
             byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
             if ((CompressionTypes)header.compressionCode == CompressionTypes.NoCompression)
             {
@@ -654,6 +663,41 @@ namespace ResourceUtilityLib
         public static string[] GetCompressionTypes()
         {
             return compression_type;
+        }
+
+        public static string GetCompressionType(ResourceHeader header)
+        {
+            return compression_type[header.compressionCode];
+        }
+
+        public static bool IsCompressed(ResourceHeader header)
+        {
+            return (header.compressionCode != (int)CompressionTypes.NoCompression);
+        }
+
+        public static bool UsesIDHash(ResourceHeader header)
+        {
+            return CheckFlag(header.flags, 16);
+        }
+
+        public static bool IsRotated(ResourceHeader header)
+        {
+            return CheckFlag(header.flags, 2);
+        }
+
+        public static bool IsPCXCompressed(ResourceHeader header)
+        {
+            return !CheckFlag(header.flags, 1);
+        }
+
+        private static bool CheckFlag(byte bitfield, byte value)
+        {
+            return ((bitfield & value) == value);
+        }
+
+        public void Dispose()
+        {
+            resource_file.Dispose();
         }
     }
 }
