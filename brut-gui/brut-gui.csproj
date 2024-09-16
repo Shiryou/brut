@@ -3,10 +3,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AssemblyName>brut-gui</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="$([MSBuild]::IsOsPlatform(OSX)) AND $(Configuration) == 'Release'">
-    <EnableCodeSigning>True</EnableCodeSigning>
+    <!--<EnableCodeSigning>True</EnableCodeSigning>-->
     <EnableNotarization>True</EnableNotarization>
     <EnableDmgBuild>True</EnableDmgBuild>
   </PropertyGroup>
