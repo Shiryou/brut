@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 
 namespace ResourceUtilityLib
 {
@@ -31,7 +30,7 @@ namespace ResourceUtilityLib
     /// <summary>
     /// Provides functions for PCX handling.
     /// </summary>
-    public class PCXHandler
+    public class ImageHandler
     {
         protected readonly BinaryReader data;
         protected readonly BinaryWriter output;
@@ -42,7 +41,7 @@ namespace ResourceUtilityLib
         /// Initializes the data streams.
         /// </summary>
         /// <param name="input"></param>
-        public PCXHandler(byte[] input)
+        public ImageHandler(byte[] input)
         {
             data = new BinaryReader(new MemoryStream(input), Encoding.UTF8, false);
             output = new BinaryWriter(new MemoryStream(), Encoding.UTF8, false);
@@ -54,7 +53,7 @@ namespace ResourceUtilityLib
         /// <param name="data">PCX data.</param>
         /// <param name="rotate">Whether to rotate the image.</param>
         /// <returns></returns>
-        public static byte[] ConvertToBitmap(byte[] data, bool rotate = false)
+        public static byte[] ConvertPCXToBitmap(byte[] data, bool rotate = false)
         {
             return new PCX(data).ConvertToBitmap(rotate);
         }
@@ -63,7 +62,7 @@ namespace ResourceUtilityLib
     /// <summary>
     /// Provides functions for PCX conversion to bitmap.
     /// </summary>
-    public class PCX : PCXHandler
+    public class PCX : ImageHandler
     {
         private readonly PCXHeader header;
         private BitmapHeader bitmap_header;
@@ -84,7 +83,7 @@ namespace ResourceUtilityLib
             data.ReadBytes((int)pcx_reserved);
             uint original_length = (uint)data.BaseStream.Length - pcx_reserved;
             decompressed_length = (uint)header.LineLength * (uint)header.Height;
-            final_size = decompressed_length + bitmap_header_length;
+            final_size = decompressed_length + bitmap_header_length; // The VGA palette starts after this, which is apparently ignored.
             uint buffer_size = (uint)Math.Max(final_size, original_length) + 2048;
         }
 
@@ -113,6 +112,7 @@ namespace ResourceUtilityLib
         /// <returns></returns>
         private PCXHeader ReadPCXHeader()
         {
+            data.BaseStream.Position = 0;
             PCXHeader header = new()
             {
                 Code = data.ReadUInt32(),

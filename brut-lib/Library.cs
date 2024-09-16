@@ -418,7 +418,7 @@ namespace ResourceUtilityLib
 
             if (supported_extensions[header.extension] == "PCX")
             {
-                uncompressed_data = PCXHandler.ConvertToBitmap(uncompressed_data, rotate);
+                uncompressed_data = ImageHandler.ConvertPCXToBitmap(uncompressed_data, rotate);
                 header.cbUncompressedData = (uint)uncompressed_data.Length;
                 header.flags |= 1;
                 if (rotate)
@@ -577,7 +577,7 @@ namespace ResourceUtilityLib
         /// <summary>
         /// Extracts a file from the resource file based on the filename.
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="filename">The filename of the resource in the resource file.</param>
         public void ExtractFile(string filename)
         {
             ExtractFile(StringToCharArray(filename));
@@ -586,7 +586,7 @@ namespace ResourceUtilityLib
         /// <summary>
         /// Extracts a file from the resource file based on the file name.
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="filename">The filename of the resource in the resource file.</param>
         public void ExtractFile(char[] filename)
         {
             ExtractFile(GetFileInformation(filename));
@@ -595,7 +595,7 @@ namespace ResourceUtilityLib
         /// <summary>
         /// Extracts a file from the resource file based on the file offset.
         /// </summary>
-        /// <param name="offset"></param>
+        /// <param name="offset">The offset of the resource in the resource file.</param>
         public void ExtractFile(uint offset)
         {
             ExtractFile(LoadResourceHeader(offset));
@@ -607,28 +607,43 @@ namespace ResourceUtilityLib
         /// </summary>
         /// <remarks>This function requires that the offset in the resource file already be set.
         /// i.e., it must be run after LoadResourceHeader and before anything changes the offset. This generally shouldn't be an issue.</remarks>
-        /// <param name="header"></param>
-        private void ExtractFile(ResourceHeader header)
+        /// <param name="header">The resource header to get data for.</param>
+        public void ExtractFile(ResourceHeader header)
         {
-            string filename_str = CharArrayToString(header.filename);
+            SaveResourceToFile(CharArrayToString(header.filename), GetResourceData(header));
+        }
+
+        /// <summary>
+        /// Extract resource data from a resource file.
+        /// </summary>
+        /// <param name="header">The resource header to get data for.</param>
+        /// <returns>The resource's data.</returns>
+        public byte[] GetResourceData(ResourceHeader header)
+        {
             byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
             if ((CompressionTypes)header.compressionCode == CompressionTypes.NoCompression)
             {
-                using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
-                {
-                    save_file.Write(compressed_data);
-                    save_file.Flush();
-                }
+                return compressed_data;
             }
             else if ((CompressionTypes)header.compressionCode == CompressionTypes.LZSSCompression)
             {
-                using (BinaryWriter save_file = new BinaryWriter(File.Open(filename_str, FileMode.Create), Encoding.UTF8, false))
-                {
-                    save_file.Write(LZSS.Decode(compressed_data, header.cbUncompressedData));
-                    save_file.Flush();
-                }
+                return LZSS.Decode(compressed_data, header.cbUncompressedData);
             }
-            return;
+            return new byte[0];
+        }
+
+        /// <summary>
+        /// Save resource data to disk.
+        /// </summary>
+        /// <param name="filename">The filename to save to.</param>
+        /// <param name="resource">The resource's data.</param>
+        public void SaveResourceToFile(string filename, byte[] resource)
+        {
+            using (BinaryWriter save_file = new BinaryWriter(File.Open(filename, FileMode.Create), Encoding.UTF8, false))
+            {
+                save_file.Write(resource);
+                save_file.Flush();
+            }
         }
 
         public static string[] GetSupportedExtensions()
