@@ -70,6 +70,7 @@ namespace BrutGui
 
         public TableLayout InitializePanels()
         {
+            fileManager = new();
             TableLayout layout = new()
             {
                 Spacing = new Eto.Drawing.Size(5, 0)
@@ -121,9 +122,15 @@ namespace BrutGui
             }
             
             string metadata = String.Format(
-                "Filename: {0}\n" +
-                "Compression: {1}\n" +
-                "Hashed with ID: {2}",
+                "Resource File\n" +
+                "Version: {0}\n" +
+                "Resources: {1}\n\n" +
+                "Resource\n" +
+                "Filename: {2}\n" +
+                "Compression: {3}\n" +
+                "Hashed with ID: {4}\n",
+                Globals.resource.FileVersion(),
+                Globals.resource.Count(),
                 ResourceUtility.CharArrayToString(selected.filename),
                 ResourceUtility.GetCompressionType(selected),
                 ResourceUtility.UsesIDHash(selected)
