@@ -37,6 +37,8 @@ namespace BrutGui
         public DynamicLayout InitializeLayout()
         {
             listBox.Items.Clear();
+            TableLayout layout = InitializePanels();
+
             DynamicLayout rootLayout = new()
             {
                 Spacing = new Eto.Drawing.Size(0, 5)
@@ -44,10 +46,12 @@ namespace BrutGui
             if (Globals.resource == null)
             {
                 fileInfo.Text = "No resource file loaded.";
+                ManageFileDependentFields(false);
             }
             else
             {
                 fileInfo.Text = String.Format("Version: {0}\nResources: {1}", Globals.resource.FileVersion(), Globals.resource.Count());
+                ManageFileDependentFields(true);
 
                 foreach (var file in Globals.resource.ListContents())
                 {
@@ -57,8 +61,9 @@ namespace BrutGui
                     });
                 }
                 listBox.SelectedValueChanged += ShowFileInfo;
+                ManageSelectedDependentFields(false);
             }
-            TableLayout layout = InitializePanels();
+
             rootLayout.Add(layout);
             return rootLayout;
         }
@@ -146,7 +151,6 @@ namespace BrutGui
             Command addButtonCmd = new();
             addButtonCmd.Executed += commands.AddFileCommand_Executed;
             add.Command = addButtonCmd;
-            add.Enabled = false;
             add.Height = 50;
             file_dependent.Add(add);
 
@@ -155,7 +159,6 @@ namespace BrutGui
             Command extractButtonCmd = new();
             extractButtonCmd.Executed += commands.ExtractFileCommand_Executed;
             extract.Command = extractButtonCmd;
-            extract.Enabled = false;
             extract.Height = 50;
             selected_dependent.Add(extract);
 
@@ -164,7 +167,6 @@ namespace BrutGui
             Command extractAllButtonCmd = new();
             extractAllButtonCmd.Executed += commands.ExtractAllFilesCommand_Executed;
             extractAll.Command = extractAllButtonCmd;
-            extractAll.Enabled = false;
             extractAll.Height = 50;
             file_dependent.Add(extractAll);
 
@@ -174,6 +176,10 @@ namespace BrutGui
 
         public void ManageFileDependentFields(bool enabled)
         {
+            if (!enabled)
+            {
+                ManageSelectedDependentFields(false);
+            }
             foreach (object item in file_dependent)
             {
                 if (item is Control)
