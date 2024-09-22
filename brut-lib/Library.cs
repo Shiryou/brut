@@ -435,37 +435,44 @@ namespace ResourceUtilityLib
                 }
             }
 
-            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            using (BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true))
+            {
+                byte[] compressed_data;
+                if (compress)
+                {
+                    compressed_data = LZSS.Encode(uncompressed_data);
+                    header.cbCompressedData = (uint)compressed_data.Length;
+                }
+                else
+                {
+                    compressed_data = new byte[0];
+                    header.cbCompressedData = header.cbUncompressedData;
+                }
 
-            byte[] compressed_data;
-            if (compress)
-            {
-                compressed_data = LZSS.Encode(uncompressed_data);
-                header.cbCompressedData = (uint)compressed_data.Length;
+                if (header.cbCompressedData >= header.cbUncompressedData)
+                {
+                    header.compressionCode = (byte)CompressionTypes.NoCompression;
+                    header.cbCompressedData = header.cbUncompressedData;
+                    header.cbChunk = size_of_rheader + header.cbCompressedData;
+                    AddFile(header, uncompressed_data);
+                }
+                else
+                {
+                    header.compressionCode = (byte)CompressionTypes.LZSSCompression;
+                    header.cbChunk = size_of_rheader + header.cbCompressedData;
+                    AddFile(header, compressed_data);
+                }
             }
-            else
-            {
-                compressed_data = new byte[0];
-                header.cbCompressedData = header.cbUncompressedData;
-            }
+        }
 
-            if (header.cbCompressedData >= header.cbUncompressedData)
+        public void AddFile (ResourceHeader header, byte[] data)
+        {
+            using (BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true))
             {
-                header.compressionCode = (byte)CompressionTypes.NoCompression;
-                header.cbCompressedData = header.cbUncompressedData;
-                header.cbChunk = size_of_rheader + header.cbCompressedData;
                 SaveResourceHeader(header, directory);
-                resfile.Write(uncompressed_data);
+                resfile.Write(data);
+                resfile.Flush();
             }
-            else
-            {
-                header.compressionCode = (byte)CompressionTypes.LZSSCompression;
-                header.cbChunk = size_of_rheader + header.cbCompressedData;
-                SaveResourceHeader(header, directory);
-                resfile.Write(compressed_data);
-            }
-
-            resfile.Flush();
             AddDirectoryEntry(header);
         }
 
