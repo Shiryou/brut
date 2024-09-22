@@ -161,6 +161,14 @@ namespace BrutGui
             add.Height = 50;
             file_dependent.Add(add);
 
+            Button remove = new();
+            remove.Text = "Remove a file";
+            Command removeButtonCmd = new();
+            removeButtonCmd.Executed += commands.RemoveFilesCommand_Executed;
+            remove.Command = removeButtonCmd;
+            remove.Height = 50;
+            selected_dependent.Add(remove);
+
             Button extract = new();
             extract.Text = "Extract selected";
             Command extractButtonCmd = new();
@@ -177,7 +185,7 @@ namespace BrutGui
             extractAll.Height = 50;
             file_dependent.Add(extractAll);
 
-            buttonContainer.Rows.Add(new TableRow(new TableCell() { ScaleWidth = true }, new TableCell(add), new TableCell(extract), new TableCell(extractAll), new TableCell() { ScaleWidth = true }));
+            buttonContainer.Rows.Add(new TableRow(new TableCell() { ScaleWidth = true }, new TableCell(add), new TableCell(remove), new TableCell(extract), new TableCell(extractAll), new TableCell() { ScaleWidth = true }));
             return buttonContainer;
         }
 

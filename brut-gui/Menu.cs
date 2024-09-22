@@ -40,6 +40,16 @@ namespace BrutGui
             addFileCommand.Enabled = false;
             form.file_dependent.Add(addFileCommand);
 
+            var removeFileCommand = new Command
+            {
+                MenuText = "&Remove a file",
+                Shortcut = Application.Instance.CommonModifier | Keys.R,
+                ID = "RemoveFileCommand"
+            };
+            removeFileCommand.Executed += commands.RemoveFilesCommand_Executed;
+            removeFileCommand.Enabled = false;
+            form.selected_dependent.Add(removeFileCommand);
+
             var extractFileCommand = new Command
             {
                 MenuText = "&Extract a file",
@@ -72,6 +82,7 @@ namespace BrutGui
             fileMenu.Items.Add(openFileCommand);
             fileMenu.Items.Add(new SeparatorMenuItem());
             fileMenu.Items.Add(addFileCommand);
+            fileMenu.Items.Add(removeFileCommand);
             fileMenu.Items.Add(extractFileCommand);
             fileMenu.Items.Add(extractAllCommand);
             fileMenu.Items.Add(new SeparatorMenuItem());

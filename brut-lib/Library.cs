@@ -56,6 +56,7 @@ namespace ResourceUtilityLib
         private readonly uint max_resource_size = 0x7FFFFFFF;
         private readonly uint end_of_header = 12;
         private readonly uint size_of_rheader = 36;
+        private readonly uint size_of_direntry = 22;
 
         private bool compress = true;
         private bool rotate = false;
@@ -260,9 +261,12 @@ namespace ResourceUtilityLib
         /// <param name="header">The metadata to write.</param>
         /// <param name="offset">The offset in the resource file to write at.</param>
         /// <returns></returns>
-        public void SaveResourceHeader(ResourceHeader header, uint offset)
+        public void SaveResourceHeader(ResourceHeader header, uint offset, BinaryWriter? resfile = null)
         {
-            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            if (resfile == null)
+            {
+                resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            }
             resfile.BaseStream.Position = offset;
 
             resfile.Write((UInt32)header.startcode);
@@ -496,6 +500,117 @@ namespace ResourceUtilityLib
 
             SaveFileHeader();
             SaveDirectory();
+        }
+
+        /// <summary>
+        /// Remove a file from the resource file.
+        /// </summary>
+        /// <param name="filename">The filename to remove.</param>
+        public void RemoveFile(string filename)
+        {
+            RemoveFile(StringToCharArray(filename));
+        }
+
+        /// <summary>
+        /// Remove a file from the resource file.
+        /// </summary>
+        /// <param name="filename">The filename to remove.</param>
+        public void RemoveFile(char[] filename)
+        {
+            RemoveFiles(new[] { filename });
+        }
+
+        /// <summary>
+        /// Remove multiple files from the resource file.
+        /// </summary>
+        /// <param name="filenames">The array of filenames.</param>
+        public void RemoveFiles(string[] filenames)
+        {
+            char[][] char_names = new char[filenames.Length][];;
+            for (int i = 0; i < filenames.Length; i++)
+            {
+                char_names[i] = StringToCharArray(filenames[i]);
+            }
+            RemoveFiles(char_names);
+        }
+
+        /// <summary>
+        /// Remove multiple files from the resource file.
+        /// </summary>
+        /// <param name="filenames">The array of filenames.</param>
+
+        public void RemoveFiles(char[][] filenames)
+        {
+            List<uint> item = new();
+            uint length = 0;
+            Dictionary<uint, bool> hashes = new();
+            uint original_directory = directory;
+            List<DirectoryEntry> newDir = new();
+            for (int i = 0; i < filenames.Length; i++)
+            {
+                if (hash_alg == HashAlgorithm.HashCrc)
+                {
+                    hashes.Add(HashCalculator.HashCRC(CharArrayToString(filenames[i])), false);
+                }
+                else
+                {
+                    hashes.Add(HashCalculator.HashID(CharArrayToString(filenames[i])), false);
+                }
+            }
+
+            // Verify the file exists before we start doing any writing.
+            uint position = end_of_header;
+            for (uint i = 0; i < resources; i++)
+            {
+                ResourceHeader header = LoadResourceHeader(position);
+                position = position + header.cbChunk;
+
+                if (hashes.ContainsKey(header.hash))
+                {
+                    hashes[header.hash] = true;
+                    item.Add(i);
+                    length += header.cbChunk + size_of_direntry;
+                }
+            }
+            foreach (bool found in hashes.Values)
+            {
+                if (!found)
+                {
+                    directory = original_directory;
+                    throw new FileNotFoundException();
+                }
+            }
+
+            position = end_of_header;
+            directory = end_of_header;
+            using (BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true))
+            {
+                for (uint i = 0; i < resources; i++)
+                {
+                    ResourceHeader header = LoadResourceHeader(position);
+
+                    if (!hashes.ContainsKey(header.hash))
+                    {
+                        byte[] data = resource_file.ReadBytes((int)header.cbCompressedData);
+
+                        SaveResourceHeader(header, directory, resfile);
+                        resfile.Write(data);
+                        resfile.Flush();
+
+                        DirectoryEntry newEntry = dirEntries[i];
+                        newEntry.offset = directory;
+                        newDir.Add(newEntry);
+                        directory = directory + header.cbChunk;
+                    }
+                    position = position + header.cbChunk;
+                }
+            }
+
+            resource_file.BaseStream.SetLength(resource_file.BaseStream.Length - length);
+            dirEntries = newDir.ToArray();
+            resources = (uint)newDir.Count;
+            SaveDirectory();
+            SaveFileHeader();
         }
 
         /// <summary>

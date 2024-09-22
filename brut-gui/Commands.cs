@@ -49,6 +49,12 @@ namespace BrutGui
             form.Content = form.InitializeLayout();
         }
 
+        public void RemoveFilesCommand_Executed(object? sender, EventArgs e)
+        {
+            Globals.resource.RemoveFile(form.selected.filename);
+            form.Content = form.InitializeLayout();
+        }
+
         public void ExtractFileCommand_Executed(object? sender, EventArgs e)
         {
             SaveFileDialog saveDialog = new() { };

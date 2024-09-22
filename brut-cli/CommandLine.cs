@@ -70,6 +70,10 @@ class ResourceUtilityCli
                     operation = Operations.OpAdd;
                     file_operation = true;
                     break;
+                case '-':
+                    operation = Operations.OpRemove;
+                    file_operation = true;
+                    break;
                 case 'E':
                     operation = Operations.OpExtract;
                     file_operation = true;
@@ -103,7 +107,6 @@ class ResourceUtilityCli
                     ru.EnableCompression();
                     break;
                 case 'U':
-                    Console.WriteLine("Compression is not yet supported when adding a file.");
                     ru.DisableCompression();
                     break;
                 case 'R':
@@ -124,6 +127,9 @@ class ResourceUtilityCli
         {
             case Operations.OpAdd:
                 Add(ru, filename);
+                break;
+            case Operations.OpRemove:
+                Remove(ru, filename);
                 break;
             case Operations.OpExtract:
                 Extract(ru, filename);
@@ -161,6 +167,11 @@ class ResourceUtilityCli
     static void Add(ResourceUtility ru, string filename)
     {
         ru.AddFiles(filename);
+    }
+
+    static void Remove(ResourceUtility ru, string filename)
+    {
+        ru.RemoveFiles(new[] { filename });
     }
 
     static void Extract(ResourceUtility ru, string filename)
