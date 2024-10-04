@@ -11,7 +11,28 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishTrimmed>true</PublishTrimmed>
     <AssemblyName>brut-cli</AssemblyName>
+    <Authors>Kiran Welle</Authors>
+    <Company>© Kiran Welle</Company>
+    <Title>Shiryou.BRUT.CLI</Title>
+    <RepositoryUrl>https://github.com/Shiryou/brut</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>© Kiran Welle</Copyright>
+    <Product>Birthright Resource Utility CLI</Product>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.143">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\brut-lib\brut-lib.csproj" />

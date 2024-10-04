@@ -4,17 +4,38 @@
     <TargetFramework>net8.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <SelfContained>true</SelfContained>
+    <PublishReadyToRun>false</PublishReadyToRun>
     <AssemblyName>brut-gui</AssemblyName>
+    <Authors>Kiran Welle</Authors>
+    <Company>© Kiran Welle</Company>
+    <Title>Shiryou.BRUT.GUI</Title>
+    <RepositoryUrl>https://github.com/Shiryou/brut</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>© Kiran Welle</Copyright>
+    <Product>Birthright Resource Utility GUI</Product>
   </PropertyGroup>
+
   <PropertyGroup Condition="$([MSBuild]::IsOsPlatform(OSX)) AND $(Configuration) == 'Release'">
     <!--<EnableCodeSigning>True</EnableCodeSigning>-->
-    <EnableNotarization>True</EnableNotarization>
-    <EnableDmgBuild>True</EnableDmgBuild>
+    <SelfContained>false</SelfContained>
+    <EnableNotarization>true</EnableNotarization>
+    <EnableDmgBuild>true</EnableDmgBuild>
   </PropertyGroup>
-  <PropertyGroup Condition="$([MSBuild]::IsOsPlatform(LINUX))">
-    <SelfContained>true</SelfContained>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
-  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Pack>true</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.143">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\brut-lib\brut-lib.csproj" />
   </ItemGroup>
