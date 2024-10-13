@@ -92,6 +92,7 @@ namespace BrutGui
                 ScaleHeight = true
             });
 
+            preview.Image = null;
             fileManager.Rows.Add(new TableRow(new TableCell(preview, true))
             {
                 ScaleHeight = true
@@ -109,6 +110,7 @@ namespace BrutGui
             {
                 ManageSelectedDependentFields(false);
                 selected = new();
+                preview.Image = null;
                 return;
             }
 
@@ -153,15 +155,26 @@ namespace BrutGui
                 metadata += String.Format("File size: {0}", selected.cbUncompressedData);
             }
 
-            if (ResourceUtility.GetSupportedExtensions()[selected.extension] == "PCX" && !RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (ResourceUtility.GetSupportedExtensions()[selected.extension] == "PCX")
             {
-                // Convert from internal bitmap back to PCX and then to standard Bitmap
-                byte[] data = Globals.resource.GetResourceData(selected);
-                MagickImage image = new(data, MagickFormat.Pcx);
-                image.Format = MagickFormat.Bmp;
-                preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
-            } else {
-                metadata += String.Format("\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.");
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    // Convert from internal bitmap back to PCX and then to standard Bitmap
+                    byte[] data = Globals.resource.GetResourceData(selected);
+                    MagickImage image = new(data, MagickFormat.Pcx);
+                    image.Format = MagickFormat.Bmp;
+                    preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
+                    metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
+                }
+                else
+                {
+                    preview.Image = null;
+                    metadata += "\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
+                }
+            }
+            else
+            {
+                metadata += "\n\nThis format currently doesn't support previews.";
             }
 
             fileInfo.Text = metadata;
