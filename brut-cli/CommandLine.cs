@@ -26,18 +26,19 @@ class ResourceUtilityCli
             Console.WriteLine("   +  add file");
             Console.WriteLine("   - remove file");
             Console.WriteLine("   c  compress resources (default)");
-            Console.WriteLine("   e  extract file (does not remove it)");
-            Console.WriteLine("   x  extract all files (does not remove them)");
+            Console.WriteLine("   e  extract file");
+            Console.WriteLine("   x  extract all files");
             Console.WriteLine("   hc use CRC hash (default)");
             Console.WriteLine("   hi use ID hash");
             Console.WriteLine("   l  list contents of resource file");
             Console.WriteLine("   n  do not rotate PCX resources (default)");
             Console.WriteLine("   r  rotate PCX resources");
             Console.WriteLine("   s  nnnnn max size of resource permitted");
+            Console.WriteLine("   t  attempt to restore a PCX file");
             Console.WriteLine("   u  do not compress resources");
             Console.WriteLine("   v  verify resource file");
             Console.WriteLine("   @  respfile run commands in respfile");
-            Console.WriteLine("Note: Compression is not yet supported when adding a file.");
+            Console.WriteLine("Note: Compression and respfiles are not yet supported.");
             return;
         }
 
@@ -114,6 +115,9 @@ class ResourceUtilityCli
                     break;
                 case 'N':
                     ru.DisablePCXRotation();
+                    break;
+                case 'T':
+                    ru.RestorePCX();
                     break;
             }
 

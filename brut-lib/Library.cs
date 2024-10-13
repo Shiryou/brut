@@ -60,6 +60,7 @@ namespace ResourceUtilityLib
 
         private bool compress = true;
         private bool rotate = false;
+        private bool restore = false;
 
         private uint file_version;
         private uint directory;
@@ -219,6 +220,16 @@ namespace ResourceUtilityLib
         public void DisablePCXRotation()
         {
             rotate = false;
+        }
+
+        public void RestorePCX()
+        {
+            restore = true;
+        }
+
+        public void RetainBitmap()
+        {
+            restore = false;
         }
 
         /// <summary>
@@ -752,15 +763,30 @@ namespace ResourceUtilityLib
         {
             resource_file.BaseStream.Position = GetFileOffset(header.filename) + size_of_rheader;
             byte[] compressed_data = resource_file.ReadBytes((int)header.cbCompressedData);
+            byte[] uncompressed_data;
             if ((CompressionTypes)header.compressionCode == CompressionTypes.NoCompression)
             {
-                return compressed_data;
+                uncompressed_data = compressed_data;
             }
             else if ((CompressionTypes)header.compressionCode == CompressionTypes.LZSSCompression)
             {
-                return LZSS.Decode(compressed_data, header.cbUncompressedData);
+                uncompressed_data = LZSS.Decode(compressed_data, header.cbUncompressedData);
             }
-            return new byte[0];
+            else
+            {
+                return new byte[0];
+            }
+            if (restore)
+            {
+                bool uncompressed = ((header.flags & (byte)1) == (byte)1);
+                bool rotated = ((header.flags & (byte)2) == (byte)1);
+                if (uncompressed)
+                {
+                    return ImageHandler.ConvertBitmapToPCX(uncompressed_data);
+                }
+            }
+            return uncompressed_data;
+
         }
 
         /// <summary>

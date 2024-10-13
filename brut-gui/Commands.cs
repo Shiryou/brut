@@ -26,6 +26,7 @@ namespace BrutGui
                     Globals.resource.Dispose();
                 }
                 Globals.resource = new ResourceUtility(openDialog.FileName);
+                Globals.resource.RestorePCX();
                 Globals.resourceName = Path.GetFileName(openDialog.FileName).ToUpper();
                 form.ManageFileDependentFields(true);
             }

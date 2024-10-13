@@ -1,8 +1,11 @@
 using System;
+using System.Drawing;
 using System.IO;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 using Eto.Forms;
+using ImageMagick;
 
 using ResourceUtilityLib;
 
@@ -19,6 +22,7 @@ namespace BrutGui
         public List<object> selected_dependent = new();
         public ListBox listBox = new();
         public Label fileInfo = new();
+        public ImageView preview = new();
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
@@ -88,6 +92,11 @@ namespace BrutGui
                 ScaleHeight = true
             });
 
+            fileManager.Rows.Add(new TableRow(new TableCell(preview, true))
+            {
+                ScaleHeight = true
+            });
+
             fileManager.Rows.Add(new TableRow(new TableCell(BuildFileControlButtons(), true)));
             layout.Rows.Add(new TableRow(new TableCell(listBox, true), new TableCell(fileManager, true)));
 
@@ -142,6 +151,17 @@ namespace BrutGui
             else
             {
                 metadata += String.Format("File size: {0}", selected.cbUncompressedData);
+            }
+
+            if (ResourceUtility.GetSupportedExtensions()[selected.extension] == "PCX" && !RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Convert from internal bitmap back to PCX and then to standard Bitmap
+                byte[] data = Globals.resource.GetResourceData(selected);
+                MagickImage image = new(data, MagickFormat.Pcx);
+                image.Format = MagickFormat.Bmp;
+                preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
+            } else {
+                metadata += String.Format("\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.");
             }
 
             fileInfo.Text = metadata;
