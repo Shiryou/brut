@@ -91,7 +91,23 @@ namespace BrutGui
             return fileMenu;
         }
 
-        public SubMenuItem BuildHelpMenu()
+        public SubMenuItem BuildSettingsMenu()
+        {
+
+            CheckMenuItem restorePCX = new() {
+                Text = "&Attempt PCX recovery",
+                Shortcut = Application.Instance.CommonModifier | Keys.R,
+                ID = "RecoverPCX"
+            };
+            restorePCX.Checked = form.restore;
+            restorePCX.CheckedChanged += commands.TogglePCXRestore_Executed;
+
+            SubMenuItem settingsMenu = new() { Text = "&Settings" };
+            settingsMenu.Items.Add(restorePCX);
+            return settingsMenu;
+        }
+
+        public MenuItem BuildHelpMenu()
         {
             var aboutCommand = new Command
             {
@@ -112,6 +128,7 @@ namespace BrutGui
                 Items =
                 {
                    BuildFileMenu(),
+                   BuildSettingsMenu(),
                    BuildHelpMenu()
                 },
                 ApplicationItems = { }

@@ -26,8 +26,15 @@ namespace BrutGui
                     Globals.resource.Dispose();
                 }
                 Globals.resource = new ResourceUtility(openDialog.FileName);
-                Globals.resource.RestorePCX();
                 Globals.resourceName = Path.GetFileName(openDialog.FileName).ToUpper();
+                if (form.restore)
+                {
+                    Globals.resource.RestorePCX();
+                }
+                else
+                {
+                    Globals.resource.RetainBitmap();
+                }
                 form.ManageFileDependentFields(true);
             }
             form.Content = form.InitializeLayout();
@@ -77,6 +84,27 @@ namespace BrutGui
                 string filePath = saveDialog.Directory + Path.DirectorySeparatorChar + ResourceUtility.CharArrayToString(item.filename);
                 Globals.resource.SaveResourceToFile(filePath, Globals.resource.GetResourceData(item));
             }
+        }
+
+        public void TogglePCXRestore_Executed(object? sender, EventArgs e)
+        {
+            CheckMenuItem menuItem = (CheckMenuItem)sender;
+            form.restore = !form.restore;
+            menuItem.Checked = form.restore;
+            if (Globals.resource != null)
+            {
+                if (!menuItem.Checked)
+                {
+                    Globals.resource.RetainBitmap();
+                    Console.WriteLine("RetainBitmap");
+                }
+                else
+                {
+                    Globals.resource.RestorePCX();
+                    Console.WriteLine("RestorePCX");
+                }
+            }
+
         }
 
         public void QuitCommand_Executed(object? sender, EventArgs e)

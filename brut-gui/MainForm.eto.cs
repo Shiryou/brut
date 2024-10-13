@@ -26,6 +26,8 @@ namespace BrutGui
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
+        public bool restore = true;
+
         void InitializeComponent()
         {
             commands = new(this);
@@ -160,7 +162,17 @@ namespace BrutGui
                 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
                     // Convert from internal bitmap back to PCX and then to standard Bitmap
-                    byte[] data = Globals.resource.GetResourceData(selected);
+                    byte[] data;
+                    if (!Globals.resource.GetRestoreSetting())
+                    {
+                        Globals.resource.RestorePCX();
+                        data = Globals.resource.GetResourceData(selected);
+                        Globals.resource.RetainBitmap();
+                    }
+                    else
+                    {
+                        data = Globals.resource.GetResourceData(selected);
+                    }
                     MagickImage image = new(data, MagickFormat.Pcx);
                     image.Format = MagickFormat.Bmp;
                     preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
@@ -237,6 +249,10 @@ namespace BrutGui
                 else if (item is Command)
                 {
                     ((Command)item).Enabled = enabled;
+                }
+                else if (item is MenuItem)
+                {
+                    ((MenuItem)item).Enabled = enabled;
                 }
             }
         }

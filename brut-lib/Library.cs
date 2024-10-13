@@ -232,6 +232,11 @@ namespace ResourceUtilityLib
             restore = false;
         }
 
+        public bool GetRestoreSetting()
+        {
+            return restore;
+        }
+
         /// <summary>
         /// Loads the header for a resource contained in a resource file and performs some sanity checks.
         /// </summary>
