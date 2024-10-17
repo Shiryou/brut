@@ -168,12 +168,7 @@ namespace BrutGui
                     break;
 
                 case "WAV":
-                    MemoryStream sound = new(Globals.resource.GetResourceData(selected));
-                    player = new(sound);
-                    if (autoplay)
-                    {
-                        player.Play();
-                    }
+                    PreviewWAV(ref metadata);
                     break;
                 default:
                     metadata += "\n\nThis format currently doesn't support previews.";
@@ -185,7 +180,7 @@ namespace BrutGui
 
         private void PreviewPCX(ref string metadata)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Convert from internal bitmap back to PCX and then to standard Bitmap
                 byte[] data;
@@ -209,6 +204,19 @@ namespace BrutGui
             {
                 preview.Image = null;
                 metadata += "\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
+            }
+        }
+
+        private void PreviewWAV(ref string metadata)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                MemoryStream sound = new(Globals.resource.GetResourceData(selected));
+                player = new(sound);
+                if (autoplay)
+                {
+                    player.Play();
+                }
             }
         }
 

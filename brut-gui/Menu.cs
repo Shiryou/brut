@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -113,6 +114,13 @@ namespace BrutGui
             SubMenuItem settingsMenu = new() { Text = "&Settings" };
             settingsMenu.Items.Add(restorePCX);
             settingsMenu.Items.Add(autoplay);
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                restorePCX.Enabled = false;
+                restorePCX.Checked = false;
+                autoplay.Enabled = false;
+            }
             return settingsMenu;
         }
 
