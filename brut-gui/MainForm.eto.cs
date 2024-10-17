@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 
 using Eto.Forms;
 using ImageMagick;
+using LibVLCSharp.Shared;
 
 using ResourceUtilityLib;
 using System.Media;
@@ -24,7 +25,8 @@ namespace BrutGui
         public ListBox listBox = new();
         public Label fileInfo = new();
         public ImageView preview = new();
-        public SoundPlayer player = new();
+        public LibVLC LibVLC;
+        public MediaPlayer player;
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
@@ -34,6 +36,17 @@ namespace BrutGui
         void InitializeComponent()
         {
             commands = new(this);
+            try
+            {
+                LibVLC = new();
+            }
+            catch (Exception ex)
+            {
+            }
+            if (LibVLC != null)
+            {
+                player = new(LibVLC);
+            }
             // sets the client (inner) size of the window for your content
             this.ClientSize = new Eto.Drawing.Size(200, 200);
             this.Size = new Eto.Drawing.Size(1000, 600);
@@ -98,7 +111,6 @@ namespace BrutGui
             });
 
             preview.Image = null;
-            player = new();
             fileManager.Rows.Add(new TableRow(new TableCell(preview, true))
             {
                 ScaleHeight = true
@@ -209,14 +221,18 @@ namespace BrutGui
 
         private void PreviewWAV(ref string metadata)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (LibVLC == null)
             {
-                MemoryStream sound = new(Globals.resource.GetResourceData(selected));
-                player = new(sound);
-                if (autoplay)
-                {
-                    player.Play();
-                }
+                metadata += "\n\nWAV previews failed to load.";
+                return;
+            }
+
+            MemoryStream sound = new(Globals.resource.GetResourceData(selected));
+            Media media = new Media(LibVLC, new StreamMediaInput(sound));
+            player = new(media);
+            if (autoplay)
+            {
+                player.Play();
             }
         }
 

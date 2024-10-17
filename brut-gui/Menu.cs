@@ -115,12 +115,6 @@ namespace BrutGui
             settingsMenu.Items.Add(restorePCX);
             settingsMenu.Items.Add(autoplay);
 
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                restorePCX.Enabled = false;
-                restorePCX.Checked = false;
-                autoplay.Enabled = false;
-            }
             return settingsMenu;
         }
 
