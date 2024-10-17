@@ -96,15 +96,19 @@ namespace BrutGui
                 if (!menuItem.Checked)
                 {
                     Globals.resource.RetainBitmap();
-                    Console.WriteLine("RetainBitmap");
                 }
                 else
                 {
                     Globals.resource.RestorePCX();
-                    Console.WriteLine("RestorePCX");
                 }
             }
+        }
 
+        public void ToggleWAVAutoplay_Executed(object? sender, EventArgs e)
+        {
+            CheckMenuItem menuItem = (CheckMenuItem)sender;
+            form.autoplay = !form.autoplay;
+            menuItem.Checked = form.autoplay;
         }
 
         public void QuitCommand_Executed(object? sender, EventArgs e)

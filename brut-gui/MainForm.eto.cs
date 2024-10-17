@@ -8,6 +8,7 @@ using Eto.Forms;
 using ImageMagick;
 
 using ResourceUtilityLib;
+using System.Media;
 
 namespace BrutGui
 {
@@ -23,10 +24,12 @@ namespace BrutGui
         public ListBox listBox = new();
         public Label fileInfo = new();
         public ImageView preview = new();
+        public SoundPlayer player = new();
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
         public bool restore = true;
+        public bool autoplay = false;
 
         void InitializeComponent()
         {
@@ -95,6 +98,7 @@ namespace BrutGui
             });
 
             preview.Image = null;
+            player = new();
             fileManager.Rows.Add(new TableRow(new TableCell(preview, true))
             {
                 ScaleHeight = true
@@ -157,39 +161,55 @@ namespace BrutGui
                 metadata += String.Format("File size: {0}", selected.cbUncompressedData);
             }
 
-            if (ResourceUtility.GetSupportedExtensions()[selected.extension] == "PCX")
+            switch(ResourceUtility.GetSupportedExtensions()[selected.extension])
             {
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    // Convert from internal bitmap back to PCX and then to standard Bitmap
-                    byte[] data;
-                    if (!Globals.resource.GetRestoreSetting())
+                case "PCX":
+                    PreviewPCX(ref metadata);
+                    break;
+
+                case "WAV":
+                    MemoryStream sound = new(Globals.resource.GetResourceData(selected));
+                    player = new(sound);
+                    if (autoplay)
                     {
-                        Globals.resource.RestorePCX();
-                        data = Globals.resource.GetResourceData(selected);
-                        Globals.resource.RetainBitmap();
+                        player.Play();
                     }
-                    else
-                    {
-                        data = Globals.resource.GetResourceData(selected);
-                    }
-                    MagickImage image = new(data, MagickFormat.Pcx);
-                    image.Format = MagickFormat.Bmp;
-                    preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
-                    metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
-                }
-                else
-                {
-                    preview.Image = null;
-                    metadata += "\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
-                }
-            }
-            else
-            {
-                metadata += "\n\nThis format currently doesn't support previews.";
+                    break;
+                default:
+                    metadata += "\n\nThis format currently doesn't support previews.";
+                    break;
             }
 
             fileInfo.Text = metadata;
+        }
+
+        private void PreviewPCX(ref string metadata)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                // Convert from internal bitmap back to PCX and then to standard Bitmap
+                byte[] data;
+                if (!Globals.resource.GetRestoreSetting())
+                {
+                    Globals.resource.RestorePCX();
+                    data = Globals.resource.GetResourceData(selected);
+                    Globals.resource.RetainBitmap();
+                }
+                else
+                {
+                    data = Globals.resource.GetResourceData(selected);
+                }
+                MagickImage image = new(data, MagickFormat.Pcx);
+                image.Format = MagickFormat.Bmp;
+                preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
+                
+                metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
+            }
+            else
+            {
+                preview.Image = null;
+                metadata += "\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
+            }
         }
 
         public TableLayout BuildFileControlButtons()
