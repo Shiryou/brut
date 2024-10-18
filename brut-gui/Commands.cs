@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.IO;
 
 using Eto.Forms;
@@ -88,12 +89,10 @@ namespace BrutGui
 
         public void TogglePCXRestore_Executed(object? sender, EventArgs e)
         {
-            CheckMenuItem menuItem = (CheckMenuItem)sender;
             form.restore = !form.restore;
-            menuItem.Checked = form.restore;
             if (Globals.resource != null)
             {
-                if (!menuItem.Checked)
+                if (form.restore)
                 {
                     Globals.resource.RetainBitmap();
                 }
@@ -102,13 +101,21 @@ namespace BrutGui
                     Globals.resource.RestorePCX();
                 }
             }
+            if (sender != null)
+            {
+                CheckMenuItem menuItem = (CheckMenuItem)sender;
+                menuItem.Checked = form.restore;
+            }
         }
 
         public void ToggleWAVAutoplay_Executed(object? sender, EventArgs e)
         {
-            CheckMenuItem menuItem = (CheckMenuItem)sender;
             form.autoplay = !form.autoplay;
-            menuItem.Checked = form.autoplay;
+            if (sender != null)
+            {
+                CheckMenuItem menuItem = (CheckMenuItem)sender;
+                menuItem.Checked = form.autoplay;
+            }
         }
 
         public void AboutCommand_Executed(object? sender, EventArgs e)
