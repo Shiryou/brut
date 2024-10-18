@@ -40,7 +40,7 @@ namespace BrutGui
             {
                 LibVLC = new();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
             if (LibVLC != null)

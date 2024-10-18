@@ -111,6 +111,14 @@ namespace BrutGui
             menuItem.Checked = form.autoplay;
         }
 
+        public void AboutCommand_Executed(object? sender, EventArgs e)
+        {
+            AboutDialog about = new();
+            about.Website = new Uri("https://github.com/Shiryou/brut");
+            about.WebsiteLabel = "GitHub";
+            about.ShowDialog(form);
+        }
+
         public void QuitCommand_Executed(object? sender, EventArgs e)
         {
             Application.Instance.Quit();

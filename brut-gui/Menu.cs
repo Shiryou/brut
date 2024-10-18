@@ -96,8 +96,8 @@ namespace BrutGui
         {
             CheckMenuItem restorePCX = new()
             {
-                Text = "&Attempt PCX recovery",
-                Shortcut = Application.Instance.CommonModifier | Keys.R,
+                Text = "Attempt &PCX recovery",
+                Shortcut = Application.Instance.CommonModifier | Keys.P,
                 ID = "RecoverPCX"
             };
             restorePCX.Checked = form.restore;
@@ -111,7 +111,7 @@ namespace BrutGui
             autoplay.Checked = form.autoplay;
             autoplay.CheckedChanged += commands.ToggleWAVAutoplay_Executed;
 
-            SubMenuItem settingsMenu = new() { Text = "&Settings" };
+            SubMenuItem settingsMenu = new() { Text = "&Options" };
             settingsMenu.Items.Add(restorePCX);
             settingsMenu.Items.Add(autoplay);
 
@@ -122,10 +122,11 @@ namespace BrutGui
         {
             var aboutCommand = new Command
             {
-                MenuText = "&About",
+                MenuText = "&About BRUT",
                 Shortcut = Application.Instance.CommonModifier | Keys.A,
                 ID = "AboutCommand"
             };
+            aboutCommand.Executed += commands.AboutCommand_Executed;
 
             SubMenuItem helpMenu = new() { Text = "&Help" };
             helpMenu.Items.Add(aboutCommand);

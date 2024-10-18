@@ -11,9 +11,11 @@
     <Company>© Kiran Welle</Company>
     <Title>Shiryou.BRUT.GUI</Title>
     <RepositoryUrl>https://github.com/Shiryou/brut</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Copyright>© Kiran Welle</Copyright>
     <Product>Birthright Resource Utility GUI</Product>
+    <Description>An application for managing resource files for Birthright: The Gorgon's Alliance. This application is based on the original RESUTIL command line utility used by Dynamix, Inc.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsOsPlatform(OSX)) AND $(Configuration) == 'Release'">
