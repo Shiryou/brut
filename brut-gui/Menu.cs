@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-
-using Eto.Forms;
+﻿using Eto.Forms;
 
 namespace BrutGui
 {
@@ -86,6 +79,16 @@ namespace BrutGui
             fileMenu.Items.Add(removeFileCommand);
             fileMenu.Items.Add(extractFileCommand);
             fileMenu.Items.Add(extractAllCommand);
+            if (Globals.mru.Count() > 0)
+            {
+                fileMenu.Items.Add(new SeparatorMenuItem());
+                foreach (string item in Globals.mru.ToArray())
+                {
+                    Command menuItem = new Command { MenuText = item };
+                    menuItem.Executed += commands.OpenFileCommand_Executed;
+                    fileMenu.Items.Add(menuItem);
+                }
+            }
             fileMenu.Items.Add(new SeparatorMenuItem());
             fileMenu.Items.Add(quitCommand);
 
@@ -123,7 +126,6 @@ namespace BrutGui
             var aboutCommand = new Command
             {
                 MenuText = "&About BRUT",
-                Shortcut = Application.Instance.CommonModifier | Keys.A,
                 ID = "AboutCommand"
             };
             aboutCommand.Executed += commands.AboutCommand_Executed;

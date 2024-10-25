@@ -18,16 +18,29 @@ namespace BrutGui
 
         public void OpenFileCommand_Executed(object? sender, EventArgs e)
         {
-            OpenFileDialog openDialog = new() { };
-            openDialog.Filters.Add("Birthright Resource files|.RES");
-            if (openDialog.ShowDialog(form) == DialogResult.Ok)
+            string filename = "";
+            if (sender is Command && ((Command)sender).MenuText != "&Open")
+            {
+                filename = ((Command)sender).MenuText;
+            }
+            else
+            {
+                OpenFileDialog openDialog = new() { };
+                openDialog.Filters.Add("Birthright Resource files|.RES");
+                if (openDialog.ShowDialog(form) == DialogResult.Ok)
+                {
+                    filename = openDialog.FileName;
+                }
+            }
+            if (filename != "")
             {
                 if (Globals.resource != null)
                 {
                     Globals.resource.Dispose();
                 }
-                Globals.resource = new ResourceUtility(openDialog.FileName);
-                Globals.resourceName = Path.GetFileName(openDialog.FileName).ToUpper();
+                Globals.resource = new ResourceUtility(filename);
+                Globals.resourceName = Path.GetFileName(filename).ToUpper();
+                Globals.mru.Add(filename);
                 if (form.restore)
                 {
                     Globals.resource.RestorePCX();
@@ -38,6 +51,7 @@ namespace BrutGui
                 }
                 form.ManageFileDependentFields(true);
             }
+            form.Menu = form.menuBar = (new Menu(form)).Initialize();
             form.Content = form.InitializeLayout();
         }
 

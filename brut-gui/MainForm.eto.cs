@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.IO;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -40,9 +39,8 @@ namespace BrutGui
             {
                 LibVLC = new();
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception) {}
+
             if (LibVLC != null)
             {
                 player = new(LibVLC);
@@ -157,12 +155,14 @@ namespace BrutGui
                 "Resource\n" +
                 "Filename: {2}\n" +
                 "Compression: {3}\n" +
-                "Hashed with ID: {4}\n",
+                "Hashed with ID: {4}\n" +
+                "Rotated: {5}\n",
                 Globals.resource.FileVersion(),
                 Globals.resource.Count(),
                 ResourceUtility.CharArrayToString(selected.filename),
                 ResourceUtility.GetCompressionType(selected),
-                ResourceUtility.UsesIDHash(selected)
+                ResourceUtility.UsesIDHash(selected),
+                (selected.flags & 2) == 2
             );
             if (selected.cbCompressedData != selected.cbUncompressedData)
             {
