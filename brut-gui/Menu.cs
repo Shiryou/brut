@@ -1,4 +1,6 @@
-﻿using Eto.Forms;
+﻿using System.Linq;
+
+using Eto.Forms;
 
 namespace BrutGui
 {
@@ -84,7 +86,16 @@ namespace BrutGui
                 fileMenu.Items.Add(new SeparatorMenuItem());
                 foreach (string item in Globals.mru.ToArray())
                 {
-                    Command menuItem = new Command { MenuText = item };
+                    int cutoff = new int[] { item.Length-45, 0 }.Max();
+                    int new_length = item.Length - cutoff;
+                    string shortened = item;
+
+                    if (new_length < item.Length)
+                    {
+                        shortened = "..."+item.Substring(cutoff, new_length);
+                    }
+
+                    Command menuItem = new Command { MenuText = shortened, ToolTip = item };
                     menuItem.Executed += commands.OpenFileCommand_Executed;
                     fileMenu.Items.Add(menuItem);
                 }

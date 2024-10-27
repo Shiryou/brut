@@ -21,7 +21,7 @@ namespace BrutGui
             string filename = "";
             if (sender is Command && ((Command)sender).MenuText != "&Open")
             {
-                filename = ((Command)sender).MenuText;
+                filename = ((Command)sender).ToolTip;
             }
             else
             {
