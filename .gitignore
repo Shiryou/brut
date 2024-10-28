@@ -95,6 +95,8 @@ artifacts/
 $tf/
 
 # Visual Studio code coverage results
+coverage/
+coverage.*
 *.coverage
 *.coveragexml
 
