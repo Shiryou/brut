@@ -1,6 +1,6 @@
 using ResourceUtilityLib;
 
-namespace ResourceUtilityTest
+namespace BrutTest
 {
     [TestClass]
     public class HashTest

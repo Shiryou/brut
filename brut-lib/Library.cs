@@ -908,7 +908,7 @@ namespace ResourceUtilityLib
         /// <param name="bitfield">The flag bitfield.</param>
         /// <param name="value">The flag to check for.</param>
         /// <returns></returns>
-        private static bool CheckFlag(byte bitfield, byte value)
+        public static bool CheckFlag(byte bitfield, byte value)
         {
             return ((bitfield & value) == value);
         }
