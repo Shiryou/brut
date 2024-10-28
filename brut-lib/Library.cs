@@ -70,6 +70,34 @@ namespace ResourceUtilityLib
         private DirectoryEntry[] dirEntries = [];
         private readonly BinaryReader resource_file;
 
+        // Constructors
+
+        /// <summary>
+        /// Loads the file and checks the file header and file index.
+        /// </summary>
+        /// <param name="filePath">The path to the resource file</param>
+        public ResourceUtility(string filePath) : this(File.Open(filePath, FileMode.OpenOrCreate)) { }
+
+        /// <summary>
+        /// Loads the file and checks the file header and file index.
+        /// </summary>
+        /// <param name="fileStream">The stream of the resource file.</param>
+        public ResourceUtility(Stream fileStream)
+        {
+            file_version = (uint)resutil_version;
+            directory = end_of_header;
+            resources = 0;
+            resource_file = new BinaryReader(fileStream, Encoding.UTF8, false);
+
+            if (resource_file.BaseStream.Length > 0)
+            {
+                LoadFileHeader();
+                LoadDirectory();
+            }
+        }
+
+        // Initializers
+
         /// <summary>
         /// Loads the file header for a resource file and performs some sanity checks.
         /// </summary>
@@ -148,23 +176,9 @@ namespace ResourceUtilityLib
             resfile.Flush();
         }
 
-        /// <summary>
-        /// Adds a new directory entry to the list.
-        /// </summary>
-        /// <param name="header">The metadata for the resource to be added.</param
-        public void AddDirectoryEntry(ResourceHeader header)
-        {
-            Array.Resize<DirectoryEntry>(ref dirEntries, (int)resources + 1);
+        // Settings management
 
-            dirEntries[(int)resources] = new DirectoryEntry();
-            dirEntries[(int)resources].hash = header.hash;
-            dirEntries[(int)resources].extension = header.extension;
-            dirEntries[(int)resources].filename = header.filename;
-            dirEntries[(int)resources].offset = directory;
 
-            resources++;
-            directory += header.cbChunk;
-        }
 
         /// <summary>
         /// Sets the current hashing algorithm to use CRC.
@@ -222,19 +236,87 @@ namespace ResourceUtilityLib
             rotate = false;
         }
 
+        /// <summary>
+        /// Enables attempts to restore a PCX file using a default palette.
+        /// </summary>
         public void RestorePCX()
         {
             restore = true;
         }
 
+        /// <summary>
+        /// Disables attempts to restore a PCX file and writes the bitmap format to file instead.
+        /// </summary>
         public void RetainBitmap()
         {
             restore = false;
         }
 
+        /// <summary>
+        /// Return the value of the restore setting.
+        /// </summary>
+        /// <returns>The restore setting's value.</returns>
         public bool GetRestoreSetting()
         {
             return restore;
+        }
+
+        // Utility functions
+
+        /// <summary>
+        /// Converts a character array to a string to simplify using it.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string CharArrayToString(char[] str)
+        {
+            return (new string(str, 0, str.Length)).Replace("\0", "");
+        }
+
+        /// <summary>
+        /// Converts a string to a character array with null padding for writing to a resource file.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static char[] StringToCharArray(string str)
+        {
+            return str.PadRight(max_resource_name, '\0').ToCharArray();
+        }
+
+        /// <summary>
+        /// Gets the resource file version as an integer.
+        /// </summary>
+        /// <returns></returns>
+        public uint FileVersion()
+        {
+            return (file_version >> 8);
+        }
+
+        /// <summary>
+        /// Gets the number of resources contained in a resource file.
+        /// </summary>
+        /// <returns></returns>
+        public uint Count()
+        {
+            return resources;
+        }
+
+        /// <summary>
+        /// Adds a new directory entry to the list.
+        /// </summary>
+        /// <param name="header">The metadata for the resource to be added.</param
+        public void AddDirectoryEntry(ResourceHeader header)
+        {
+            Array.Resize<DirectoryEntry>(ref dirEntries, (int)resources + 1);
+
+            dirEntries[(int)resources] = new DirectoryEntry();
+            dirEntries[(int)resources].hash = header.hash;
+            dirEntries[(int)resources].extension = header.extension;
+            dirEntries[(int)resources].filename = header.filename;
+            dirEntries[(int)resources].offset = directory;
+
+            resources++;
+            directory += header.cbChunk;
         }
 
         /// <summary>
@@ -296,62 +378,6 @@ namespace ResourceUtilityLib
             resfile.Write(header.filename);
 
             resfile.Flush();
-        }
-
-        /// <summary>
-        /// Converts a character array to a string to simplify using it.
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static string CharArrayToString(char[] str)
-        {
-            return (new string(str, 0, str.Length)).Replace("\0", "");
-        }
-
-        /// <summary>
-        /// Converts a string to a character array with null padding for writing to a resource file.
-        /// </summary>
-        /// <param name="str"></param>
-        /// <returns></returns>
-        public static char[] StringToCharArray(string str)
-        {
-            return str.PadRight(max_resource_name, '\0').ToCharArray();
-        }
-
-        /// <summary>
-        /// Gets the resource file version as an integer.
-        /// </summary>
-        /// <returns></returns>
-        public uint FileVersion()
-        {
-            return (file_version >> 8);
-        }
-
-        /// <summary>
-        /// Gets the number of resources contained in a resource file.
-        /// </summary>
-        /// <returns></returns>
-        public uint Count()
-        {
-            return resources;
-        }
-
-        /// <summary>
-        /// Loads the file and checks the file header and file index.
-        /// </summary>
-        /// <param name="filePath"></param>
-        public ResourceUtility(string filePath)
-        {
-            file_version = (uint)resutil_version;
-            directory = end_of_header;
-            resources = 0;
-            resource_file = new BinaryReader(File.Open(filePath, FileMode.OpenOrCreate), Encoding.UTF8, false);
-
-            if (resource_file.BaseStream.Length > 0)
-            {
-                LoadFileHeader();
-                LoadDirectory();
-            }
         }
 
         /// <summary>
@@ -630,27 +656,6 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
-        /// Extracts all files in the resource file.
-        /// </summary>
-        /// <param name="verify"></param>
-        /// <returns></returns>
-        public void ExtractAll()
-        {
-            if (file_version != resutil_version)
-            {
-                return;
-            }
-
-            uint position = end_of_header;
-            for (int i = 0; i < resources; i++)
-            {
-                ResourceHeader header = LoadResourceHeader(position);
-                ExtractFile(header.filename);
-                position = position + header.cbChunk;
-            }
-        }
-
-        /// <summary>
         /// Gets the file header for a resource.
         /// </summary>
         /// <param name="filename">The filename</param>
@@ -760,6 +765,27 @@ namespace ResourceUtilityLib
         }
 
         /// <summary>
+        /// Extracts all files in the resource file.
+        /// </summary>
+        /// <param name="verify"></param>
+        /// <returns></returns>
+        public void ExtractAll()
+        {
+            if (file_version != resutil_version)
+            {
+                return;
+            }
+
+            uint position = end_of_header;
+            for (int i = 0; i < resources; i++)
+            {
+                ResourceHeader header = LoadResourceHeader(position);
+                ExtractFile(header.filename);
+                position = position + header.cbChunk;
+            }
+        }
+
+        /// <summary>
         /// Extract resource data from a resource file.
         /// </summary>
         /// <param name="header">The resource header to get data for.</param>
@@ -808,46 +834,88 @@ namespace ResourceUtilityLib
             }
         }
 
+        /// <summary>
+        /// Return the supported extensions.
+        /// </summary>
+        /// <returns>The supported extensions.</returns>
         public static string[] GetSupportedExtensions()
         {
             return supported_extensions;
         }
 
+        /// <summary>
+        /// Return the supported compression types.
+        /// </summary>
+        /// <returns>The supported compression types.</returns>
         public static string[] GetCompressionTypes()
         {
             return compression_type;
         }
 
+        /// <summary>
+        /// Return the compression type used on a particular resource.
+        /// </summary>
+        /// <param name="header">The resource's header.</param>
+        /// <returns>The resource's compression type.</returns>
         public static string GetCompressionType(ResourceHeader header)
         {
             return compression_type[header.compressionCode];
         }
 
+        /// <summary>
+        /// Check if a resource is compressed.
+        /// </summary>
+        /// <param name="header">The resource's header.</param>
+        /// <returns>The resource's compression status.</returns>
         public static bool IsCompressed(ResourceHeader header)
         {
             return (header.compressionCode != (int)CompressionTypes.NoCompression);
         }
 
+        /// <summary>
+        /// Check if a resource uses ID hashes.
+        /// </summary>
+        /// <param name="header">The resource's header.</param>
+        /// <returns>Whether the resource uses ID hashes.</returns>
         public static bool UsesIDHash(ResourceHeader header)
         {
             return CheckFlag(header.flags, 16);
         }
 
+        /// <summary>
+        /// Check if a PCX resource is rotated.
+        /// </summary>
+        /// <param name="header">The resource's header.</param>
+        /// <returns>Whether the resource is rotated.</returns>
         public static bool IsRotated(ResourceHeader header)
         {
             return CheckFlag(header.flags, 2);
         }
 
+        /// <summary>
+        /// Check if a PCX resource is pre-compressed.
+        /// </summary>
+        /// <param name="header">The resource's header.</param>
+        /// <returns>Whether the resource is pre-compressed.</returns>
         public static bool IsPCXCompressed(ResourceHeader header)
         {
             return !CheckFlag(header.flags, 1);
         }
 
+        /// <summary>
+        /// Check if a resource has a certain flag checked.
+        /// </summary>
+        /// <param name="bitfield">The flag bitfield.</param>
+        /// <param name="value">The flag to check for.</param>
+        /// <returns></returns>
         private static bool CheckFlag(byte bitfield, byte value)
         {
             return ((bitfield & value) == value);
         }
 
+        /// <summary>
+        /// Dispose of any unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             resource_file.Dispose();
