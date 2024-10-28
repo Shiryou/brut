@@ -108,7 +108,7 @@ namespace ResourceUtilityLib
             resource_file.BaseStream.Position = 0;
 
             file_version = resource_file.ReadUInt32();
-            if (file_version > resutil_version)
+            if (file_version != resutil_version)
             {
                 throw new UnsupportedVersionException();
             }

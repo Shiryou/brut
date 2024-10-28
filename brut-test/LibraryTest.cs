@@ -17,6 +17,34 @@ namespace BrutTest
         }
 
         [TestMethod]
+        [ExpectedException(typeof(UnsupportedVersionException), "An invalid file version was accepted.")]
+        public void CannotOpenInvalidFileVersion()
+        {
+            MemoryStream resfile = new MemoryStream();
+            ResourceUtility brut = new(resfile);
+            brut.SaveFileHeader();
+            resfile.Position = 0;
+            BinaryWriter writer = new BinaryWriter(resfile);
+            writer.Write((uint)3);
+
+            ResourceUtility brut2 = new(resfile);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(IndexOutOfRangeException), "An invalid resource file was accepted.")]
+        public void CannotOpenInvalidDIrectory()
+        {
+            MemoryStream resfile = new MemoryStream();
+            ResourceUtility brut = new(resfile);
+            brut.SaveFileHeader();
+            BinaryWriter writer = new BinaryWriter(resfile);
+            resfile.Position = 4;
+            writer.Write((uint)1000);
+
+            ResourceUtility brut2 = new(resfile);
+        }
+
+        [TestMethod]
         public void ConvertCharArrayToString()
         {
             char[] array = [ 'R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 'U', 't', 'i', 'l', 'i', 't', 'y', '\0' ];
