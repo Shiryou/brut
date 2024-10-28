@@ -57,16 +57,18 @@ namespace ResourceUtilityLib
 
             uint result = 0;
 
+            bool found_digit = false;
             foreach (char c in name)
             {
                 if (!Char.IsDigit(c))
                 {
+                    if (found_digit)
+                    {
+                        break;
+                    }
                     continue;
                 }
-                if (c == '.')
-                {
-                    break;
-                }
+                found_digit = true;
                 result = (result * 10) + (uint)(c - '0');
             }
             return result;
