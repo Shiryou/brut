@@ -82,6 +82,20 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: powershell Compress-Archive -Path '${{ matrix.gui_src }}\*' -DestinationPath '${{ matrix.gui_dst }}' -Force
 
+    - name: Install coverlet
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: dotnet tool install -g coverlet.console
+    - name: Get code coverage
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: coverlet ./brut-test/bin/Debug/net8.0/brut-test.dll --target "dotnet" --targetargs "test --no-build"
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v2
+      if: ${{ matrix.os == 'windows-latest' }}
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.json
+        verbose: true
+
     - name: Update nightly release
       uses: ncipollo/release-action@main
       with:
