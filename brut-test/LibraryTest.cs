@@ -17,6 +17,17 @@ namespace BrutTest
         }
 
         [TestMethod]
+        public void OpenEmptyResourceFile()
+        {
+            MemoryStream resfile = new MemoryStream();
+            ResourceUtility brut = new(resfile);
+            brut.SaveFileHeader();
+            ResourceUtility brut2 = new(resfile);
+            Assert.AreEqual((uint)0, brut2.Count());
+            Assert.AreEqual((uint)4, brut2.FileVersion());
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(UnsupportedVersionException), "An invalid file version was accepted.")]
         public void CannotOpenInvalidFileVersion()
         {
@@ -45,6 +56,18 @@ namespace BrutTest
         }
 
         [TestMethod]
+        public void AddEmptyResource()
+        {
+            MemoryStream resfile = new MemoryStream();
+            MemoryStream flcfile = new MemoryStream();
+
+            ResourceUtility brut = new(resfile);
+            brut.AddFile("FILENAME.FLC", flcfile);
+            Assert.AreEqual((uint)1, brut.Count() );
+            Assert.AreEqual("FILENAME.FLC", ResourceUtility.CharArrayToString(brut.ListContents()[0].filename));
+        }
+
+        [TestMethod]
         public void ConvertCharArrayToString()
         {
             char[] array = [ 'R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 'U', 't', 'i', 'l', 'i', 't', 'y', '\0' ];
@@ -60,6 +83,30 @@ namespace BrutTest
 
             CollectionAssert.AreEqual(shortArray, ResourceUtility.StringToCharArray("Rez"));
             CollectionAssert.AreEqual(longArray, ResourceUtility.StringToCharArray("ResourceUtility"));
+        }
+
+        [TestMethod]
+        public void GetHashTypes()
+        {
+            ResourceUtility brut = new(new MemoryStream());
+
+            Assert.AreEqual(HashAlgorithm.HashCrc, brut.GetHashType());
+            brut.UseIDHash();
+            Assert.AreEqual(HashAlgorithm.HashId, brut.GetHashType());
+            brut.UseCRCHash();
+            Assert.AreEqual(HashAlgorithm.HashCrc, brut.GetHashType());
+        }
+
+        [TestMethod]
+        public void GetRestoreSetting()
+        {
+            ResourceUtility brut = new(new MemoryStream());
+
+            Assert.AreEqual(false, brut.GetRestoreSetting());
+            brut.RestorePCX();
+            Assert.AreEqual(true, brut.GetRestoreSetting());
+            brut.RetainBitmap();
+            Assert.AreEqual(false, brut.GetRestoreSetting());
         }
 
         [TestMethod]

@@ -432,12 +432,17 @@ namespace ResourceUtilityLib
         /// Add a file to the resource file.
         /// </summary>
         /// <param name="file">The file path to add.</param>
-        public void AddFile(string file)
+        /// <param name="fileStream">A stream of file data to add.</param>
+        public void AddFile(string file, Stream? fileStream = null)
         {
             ResourceHeader header = new ResourceHeader();
             string filename = Path.GetFileName(file).ToUpper();
             string extension = Path.GetExtension(filename)[1..];
-            BinaryReader read_file = new BinaryReader(File.Open(file, FileMode.Open), Encoding.UTF8, false);
+            if (fileStream == null)
+            {
+                fileStream = File.Open(file, FileMode.Open);
+            }
+            BinaryReader read_file = new BinaryReader(fileStream, Encoding.UTF8, false);
 
             header.flags = 0;
             header.cbUncompressedData = (uint)read_file.BaseStream.Length;
@@ -780,7 +785,7 @@ namespace ResourceUtilityLib
             for (int i = 0; i < resources; i++)
             {
                 ResourceHeader header = LoadResourceHeader(position);
-                ExtractFile(header.filename);
+                ExtractFile(header);
                 position = position + header.cbChunk;
             }
         }
