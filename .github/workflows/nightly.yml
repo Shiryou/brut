@@ -87,13 +87,13 @@ jobs:
       run: dotnet tool install -g coverlet.console
     - name: Get code coverage
       if: ${{ matrix.os == 'windows-latest' }}
-      run: coverlet ./brut-test/bin/Debug/net8.0/brut-test.dll --target "dotnet" --targetargs "test --no-build"
+      run: coverlet ./brut-test/bin/Debug/net8.0/brut-test.dll --target "dotnet" --targetargs "test --no-build" --format "cobertura"
     - name: Upload to Codecov
       uses: codecov/codecov-action@v2
       if: ${{ matrix.os == 'windows-latest' }}
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.json
+        files: ./coverage.cobertura.xml
         verbose: true
 
     - name: Update nightly release
