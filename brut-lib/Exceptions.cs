@@ -2,17 +2,18 @@
 {
     public class UnsupportedVersionException : Exception
     {
+        protected static readonly string error = "%s is not a supported resource file version.";
         public UnsupportedVersionException()
         {
         }
 
-        public UnsupportedVersionException(string message)
-            : base(message)
+        public UnsupportedVersionException(uint version)
+            : base(String.Format(error, version))
         {
         }
 
-        public UnsupportedVersionException(string message, Exception inner)
-            : base(message, inner)
+        public UnsupportedVersionException(uint version, Exception inner)
+            : base(String.Format(error, version), inner)
         {
         }
     }

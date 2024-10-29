@@ -91,8 +91,20 @@ namespace ResourceUtilityLib
 
             if (resource_file.BaseStream.Length > 0)
             {
-                LoadFileHeader();
-                LoadDirectory();
+                try
+                {
+
+                    LoadFileHeader();
+                    LoadDirectory();
+                }
+                catch (Exception ex)
+                {
+                    if (ex is UnsupportedVersionException || ex is IndexOutOfRangeException)
+                    {
+                        throw;
+                    }
+                    throw new InvalidResourceException("A data read exception occured while loading the resource file.");
+                }
             }
         }
 
@@ -110,7 +122,7 @@ namespace ResourceUtilityLib
             file_version = resource_file.ReadUInt32();
             if (file_version != resutil_version)
             {
-                throw new UnsupportedVersionException();
+                throw new UnsupportedVersionException(file_version);
             }
             directory = resource_file.ReadUInt32();
             if (directory > resource_file.BaseStream.Length)
@@ -331,24 +343,38 @@ namespace ResourceUtilityLib
 
             ResourceHeader header;
 
-            header.startcode = resource_file.ReadUInt32();
-            if (header.startcode != resource_start_code)
+            try
             {
-                throw new InvalidResourceException();
-            }
+                header.startcode = resource_file.ReadUInt32();
+                if (header.startcode != resource_start_code)
+                {
+                    throw new InvalidResourceException("Invalid resource start code.");
+                }
 
-            header.cbChunk = resource_file.ReadUInt32();
-            header.cbCompressedData = resource_file.ReadUInt32();
-            header.cbUncompressedData = resource_file.ReadUInt32();
-            if (header.cbCompressedData > header.cbUncompressedData)
-            {
-                throw new InvalidResourceException();
+                header.cbChunk = resource_file.ReadUInt32();
+                header.cbCompressedData = resource_file.ReadUInt32();
+                header.cbUncompressedData = resource_file.ReadUInt32();
+                if (header.cbCompressedData > header.cbUncompressedData)
+                {
+                    throw new InvalidResourceException("The resource compressed data is larger than uncompressed data.");
+                }
+                header.hash = resource_file.ReadUInt32();
+                header.flags = resource_file.ReadByte();
+                header.compressionCode = resource_file.ReadByte();
+                header.extension = resource_file.ReadByte();
+                header.filename = resource_file.ReadChars(max_resource_name);
             }
-            header.hash = resource_file.ReadUInt32();
-            header.flags = resource_file.ReadByte();
-            header.compressionCode = resource_file.ReadByte();
-            header.extension = resource_file.ReadByte();
-            header.filename = resource_file.ReadChars(max_resource_name);
+            catch (Exception ex)
+            {
+                if (ex is InvalidResourceException)
+                {
+                    throw;
+                }
+                else
+                {
+                    throw new InvalidResourceException("A data read exception occured while reading a resource.", ex);
+                }
+            }
 
             return header;
         }

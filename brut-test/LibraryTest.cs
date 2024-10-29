@@ -50,21 +50,58 @@ namespace BrutTest
             brut.SaveFileHeader();
             BinaryWriter writer = new BinaryWriter(resfile);
             resfile.Position = 4;
-            writer.Write((uint)1000);
+            writer.Write((uint)resfile.Length+1);
 
             ResourceUtility brut2 = new(resfile);
         }
 
         [TestMethod]
-        public void AddEmptyResource()
+        public void AddResource()
         {
             MemoryStream resfile = new MemoryStream();
             MemoryStream flcfile = new MemoryStream();
 
             ResourceUtility brut = new(resfile);
+            brut.DisableCompression(); // disable compression, because it's not what we're testing.
             brut.AddFile("FILENAME.FLC", flcfile);
-            Assert.AreEqual((uint)1, brut.Count() );
+            Assert.AreEqual((uint)1, brut.Count());
             Assert.AreEqual("FILENAME.FLC", ResourceUtility.CharArrayToString(brut.ListContents()[0].filename));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidResourceException), "An invalid resource version was accepted.")]
+        public void CannotLoadResourceWithInvalidStarCode()
+        {
+            MemoryStream resfile = new MemoryStream();
+            MemoryStream flcfile = new MemoryStream();
+
+            ResourceUtility brut = new(resfile);
+            brut.DisableCompression(); // disable compression, because it's not what we're testing.
+            brut.AddFile("FILENAME.FLC", flcfile);
+
+            BinaryWriter writer = new BinaryWriter(resfile);
+            resfile.Position = brut.GetFileOffset("FILENAME.FLC");
+            writer.Write((uint)1129878754);
+
+            brut.GetFileInformation("FILENAME.FLC");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidResourceException), "An invalid resource version was accepted.")]
+        public void CannotLoadResourceWithInvalidSize()
+        {
+            MemoryStream resfile = new MemoryStream();
+            MemoryStream flcfile = new MemoryStream();
+
+            ResourceUtility brut = new(resfile);
+            brut.DisableCompression(); // disable compression, because it's not what we're testing.
+            brut.AddFile("FILENAME.FLC", flcfile);
+
+            BinaryWriter writer = new BinaryWriter(resfile);
+            resfile.Position = brut.GetFileOffset("FILENAME.FLC") + 8;
+            writer.Write((uint)100);
+
+            brut.GetFileInformation("FILENAME.FLC");
         }
 
         [TestMethod]
