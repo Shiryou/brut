@@ -41,7 +41,7 @@ namespace BrutGui
         public static void SaveMRU()
         {
             string fileName = "test.json";
-            
+
             File.WriteAllText(fileName, Globals.mru.ToJson());
         }
     }

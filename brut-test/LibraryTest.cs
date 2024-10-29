@@ -50,7 +50,7 @@ namespace BrutTest
             brut.SaveFileHeader();
             BinaryWriter writer = new BinaryWriter(resfile);
             resfile.Position = 4;
-            writer.Write((uint)resfile.Length+1);
+            writer.Write((uint)resfile.Length + 1);
 
             ResourceUtility brut2 = new(resfile);
         }
@@ -107,7 +107,7 @@ namespace BrutTest
         [TestMethod]
         public void ConvertCharArrayToString()
         {
-            char[] array = [ 'R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 'U', 't', 'i', 'l', 'i', 't', 'y', '\0' ];
+            char[] array = ['R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 'U', 't', 'i', 'l', 'i', 't', 'y', '\0'];
 
             Assert.AreEqual("ResourceUtility", ResourceUtility.CharArrayToString(array));
         }
@@ -115,8 +115,8 @@ namespace BrutTest
         [TestMethod]
         public void ConvertStringToCharArray()
         {
-            char[] shortArray = [ 'R', 'e', 'z', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0' ];
-            char[] longArray = [ 'R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 'U', 't', 'i', 'l', 'i', 't', 'y' ];
+            char[] shortArray = ['R', 'e', 'z', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'];
+            char[] longArray = ['R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 'U', 't', 'i', 'l', 'i', 't', 'y'];
 
             CollectionAssert.AreEqual(shortArray, ResourceUtility.StringToCharArray("Rez"));
             CollectionAssert.AreEqual(longArray, ResourceUtility.StringToCharArray("ResourceUtility"));

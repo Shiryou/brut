@@ -86,13 +86,13 @@ namespace BrutGui
                 fileMenu.Items.Add(new SeparatorMenuItem());
                 foreach (string item in Globals.mru.ToArray())
                 {
-                    int cutoff = new int[] { item.Length-45, 0 }.Max();
+                    int cutoff = new int[] { item.Length - 45, 0 }.Max();
                     int new_length = item.Length - cutoff;
                     string shortened = item;
 
                     if (new_length < item.Length)
                     {
-                        shortened = "..."+item.Substring(cutoff, new_length);
+                        shortened = "..." + item.Substring(cutoff, new_length);
                     }
 
                     Command menuItem = new Command { MenuText = shortened, ToolTip = item };

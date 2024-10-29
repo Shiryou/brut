@@ -19,7 +19,7 @@ namespace BrutGui
             if (json != null)
             {
                 string[] temp = JsonSerializer.Deserialize<string[]>(json);
-                for (int i = temp.Count() - 1; i >= 0; i-- )
+                for (int i = temp.Count() - 1; i >= 0; i--)
                 {
                     Add(temp[i]);
                 }
@@ -45,7 +45,8 @@ namespace BrutGui
                     if (i == _count - 1)
                     {
                         _mru[i] = item;
-                    } else
+                    }
+                    else
                     {
                         _mru[i] = _mru[i + 1];
                     }

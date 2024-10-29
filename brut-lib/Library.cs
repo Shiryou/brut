@@ -542,7 +542,7 @@ namespace ResourceUtilityLib
             }
         }
 
-        public void AddFile (ResourceHeader header, byte[] data)
+        public void AddFile(ResourceHeader header, byte[] data)
         {
             using (BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true))
             {
@@ -599,7 +599,7 @@ namespace ResourceUtilityLib
         /// <param name="filenames">The array of filenames.</param>
         public void RemoveFiles(string[] filenames)
         {
-            char[][] char_names = new char[filenames.Length][];;
+            char[][] char_names = new char[filenames.Length][];
             for (int i = 0; i < filenames.Length; i++)
             {
                 char_names[i] = StringToCharArray(filenames[i]);

@@ -315,8 +315,8 @@ namespace ResourceUtilityLib
             output.Write(0x0801050a);
             output.Write(pcx_header.XOrigin);
             output.Write(pcx_header.YOrigin);
-            output.Write((short)(pcx_header.Width-1));
-            output.Write((short)(pcx_header.Height-1));
+            output.Write((short)(pcx_header.Width - 1));
+            output.Write((short)(pcx_header.Height - 1));
             output.Write(0x01e00280);
             output.Write(new byte[2]);
             // write a common palette
@@ -422,7 +422,7 @@ namespace ResourceUtilityLib
             {
                 return [start];
             }
-            return [(byte)(192+count), start];
+            return [(byte)(192 + count), start];
         }
     }
 }

@@ -1,14 +1,16 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using System.Media;
 using System.Runtime.InteropServices;
 
 using Eto.Forms;
+
 using ImageMagick;
+
 using LibVLCSharp.Shared;
 
 using ResourceUtilityLib;
-using System.Media;
 
 namespace BrutGui
 {
@@ -39,7 +41,7 @@ namespace BrutGui
             {
                 LibVLC = new();
             }
-            catch (Exception) {}
+            catch (Exception) { }
 
             if (LibVLC != null)
             {
@@ -134,7 +136,8 @@ namespace BrutGui
             try
             {
                 selected = Globals.resource.GetFileInformation(listBox.SelectedValue.ToString());
-            } catch (FileNotFoundException)
+            }
+            catch (FileNotFoundException)
             {
                 HashAlgorithm alg = Globals.resource.GetHashType();
                 if (alg == HashAlgorithm.HashCrc)
@@ -147,7 +150,7 @@ namespace BrutGui
                 }
                 selected = Globals.resource.GetFileInformation(listBox.SelectedValue.ToString());
             }
-            
+
             string metadata = String.Format(
                 "Resource File\n" +
                 "Version: {0}\n" +
@@ -173,7 +176,7 @@ namespace BrutGui
                 metadata += String.Format("File size: {0}", selected.cbUncompressedData);
             }
 
-            switch(ResourceUtility.GetSupportedExtensions()[selected.extension])
+            switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
             {
                 case "PCX":
                     PreviewPCX(ref metadata);
@@ -209,7 +212,7 @@ namespace BrutGui
                 MagickImage image = new(data, MagickFormat.Pcx);
                 image.Format = MagickFormat.Bmp;
                 preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
-                
+
                 metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
             }
             else
