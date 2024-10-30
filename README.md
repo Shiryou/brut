@@ -10,7 +10,7 @@ This tool can be used in conjunction with the [modding reference document](https
 
 ## Installation
 
-BRUT is available for Windows, Ubuntu, and MacOS and can be found in the [nightly](https://github.com/Shiryou/brut/releases/tag/nightly) tag. It is currently only available as an archive or binary. No installer is available.
+BRUT is available for Windows, Ubuntu, and MacOS and can be found in the [releases section](https://github.com/Shiryou/brut/releases), with the most up to date development build in the [nightly tag](https://github.com/Shiryou/brut/releases/tag/nightly) tag. It is currently only available as an archive or binary. No installer is available.
 
 On Linux, you may need to install `libvlc-dev` (for WAV previews).
 
@@ -33,9 +33,7 @@ Some high priority features that are needed to get to 1.0.
 
 ## Changelog
 
-Changelogs are available for the various formats here:
-
-* [brut-lib](./brut-lib/CHANGELOG.md)
+[Changelog](./CHANGELOG.md)
 
 ## License
 
