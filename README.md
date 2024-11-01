@@ -6,7 +6,7 @@ A library, command line, and graphical interface to manage resourse files (`.RES
 
 This tool can be used in conjunction with the [modding reference document](https://www.kiranwelle.com/birthright/modding-reference/) to expand upon the game as-is or create total conversions.
 
-![BRUT screenshot](https://i.imgur.com/owjSbTQ.png)
+![BRUT screenshot](./assets/Screenshot.png)
 
 ## Installation
 
