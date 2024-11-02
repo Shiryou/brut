@@ -1,28 +1,24 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: Tests
+name: Releases
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      refToBuild:
+        description: 'Tag to build'
+        type: string
+
+env:
+  TAG: ${{ inputs.refToBuild || github.ref_name }}
 
 jobs:
-  create_release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Update git tag
-      run: |
-        git tag -f nightly
-        git push -f origin nightly
-
   build:
     name: Build Release
-    needs: create_release
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -30,25 +26,26 @@ jobs:
           - os: ubuntu-latest
             cli_src: ./brut-cli/bin/Release/net8.0/linux-x64/publish/brut-cli
             gui_src: ./brut-gui/bin/Gtk/Release/net8.0/linux-x64/publish
-            cli_dst: ./brut-cli-ubuntu
-            gui_dst: ./brut-gui-ubuntu.gz
+            cli_dst: ./brut-cli-ubuntu-${{ inputs.refToBuild || github.ref_name }}
+            gui_dst: ./brut-gui-ubuntu-${{ inputs.refToBuild || github.ref_name }}.gz
           - os: macos-latest
             cli_src: ./brut-cli/bin/Release/net8.0/osx-arm64/publish/brut-cli
             gui_src: ./brut-gui/bin/Mac64/Release/net8.0/brut-gui.dmg
-            cli_dst: ./brut-cli-mac
-            gui_dst: ./brut-gui-mac.dmg
+            cli_dst: ./brut-cli-mac-${{ inputs.refToBuild || github.ref_name }}
+            gui_dst: ./brut-gui-mac-${{ inputs.refToBuild || github.ref_name }}.dmg
             extension: 
           - os: windows-latest
             cli_src: .\brut-cli\bin\Release\net8.0\win-x64\publish\brut-cli.exe
             gui_src: .\brut-gui\bin\Wpf\Release\net8.0-windows\win-x64\publish\
-            cli_dst: .\brut-cli-win.exe
-            gui_dst: .\brut-gui-win.zip
+            cli_dst: .\brut-cli-win-${{ inputs.refToBuild || github.ref_name }}.exe
+            gui_dst: .\brut-gui-win-${{ inputs.refToBuild || github.ref_name }}.zip
     runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        ref: ${{ env.TAG }}
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -82,29 +79,15 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: powershell Compress-Archive -Path '${{ matrix.gui_src }}\*' -DestinationPath '${{ matrix.gui_dst }}' -Force
 
-    - name: Install coverlet
-      if: ${{ matrix.os == 'windows-latest' }}
-      run: dotnet tool install -g coverlet.console
-    - name: Get code coverage
-      if: ${{ matrix.os == 'windows-latest' }}
-      run: coverlet ./brut-test/bin/Debug/net8.0/brut-test.dll --target "dotnet" --targetargs "test --no-build" --format "cobertura"
-    - name: Upload to Codecov
-      uses: codecov/codecov-action@v2
-      if: ${{ matrix.os == 'windows-latest' }}
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage.cobertura.xml
-        verbose: true
-
     - name: Update nightly release
       uses: ncipollo/release-action@main
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: "${{ matrix.cli_dst }},${{ matrix.gui_dst }}"
-        tag: "nightly"
-        commit: ${{ github.ref_name }}
-        body: A build of the most recent compilable commit to the repository. Use at your own risk.
-        prerelease: true
+        tag: ${{ env.TAG }}
+        commit: ${{ env.TAG }}
+        name: "📦 Release ${{ env.TAG }}"
+        draft: true
         allowUpdates: true
         updateOnlyUnreleased: true
         removeArtifacts: false
