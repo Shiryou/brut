@@ -213,7 +213,10 @@ namespace BrutGui
                 image.Format = MagickFormat.Bmp;
                 preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
 
-                metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
+                if ((selected.flags & 2) == 2)
+                {
+                    metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
+                }
             }
             else
             {
