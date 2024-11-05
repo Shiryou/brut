@@ -81,10 +81,10 @@ public class LZSSDecoder
     private uint compressed_index = 0;
     private uint uncompressed_index = 0;
     private readonly uint uncompressed_length;
-    private readonly byte[] pInput;
+    private readonly System.Collections.Immutable.ImmutableArray<byte> pInput;
     private ushort current_word;
     private ushort bitflags;
-    private byte[] pOutput;
+    private readonly byte[] pOutput;
 
     /// <summary>
     /// Initializes the base data structures.
@@ -92,7 +92,7 @@ public class LZSSDecoder
     /// <param name="pData">The byte array to compress.</param>
     public LZSSDecoder(byte[] pData, uint myLength)
     {
-        pInput = pData;
+        pInput = System.Collections.Immutable.ImmutableArray.Create(pData);
         uncompressed_length = myLength;
         pOutput = new byte[uncompressed_length];
     }
@@ -131,7 +131,7 @@ public class LZSSDecoder
     /// <returns>The bitflags.</returns>
     private ushort GetFlags()
     {
-        ushort next = (ushort)((pInput[compressed_index]) + (pInput[compressed_index + 1] << 8));
+        ushort next = (ushort)((pInput[(int)compressed_index]) + (pInput[(int)compressed_index + 1] << 8));
         compressed_index += 2;
         return next;
     }
@@ -160,7 +160,7 @@ public class LZSSDecoder
     /// <returns>The next step to run.</returns>
     private States MoveByte()
     {
-        pOutput[uncompressed_index++] = pInput[compressed_index++];
+        pOutput[uncompressed_index++] = pInput[(int)(compressed_index++)];
         ushort test_msb = (ushort)(bitflags >> 15); // The state of the Carry Flag after the bitshift.
         bitflags <<= 1;
         if (bitflags == 0)
