@@ -16,7 +16,6 @@ namespace BrutGui
 
         public SubMenuItem BuildFileMenu()
         {
-
             // create menu
             var openFileCommand = new Command
             {
@@ -34,7 +33,7 @@ namespace BrutGui
             };
             addFileCommand.Executed += commands.AddFileCommand_Executed;
             addFileCommand.Enabled = false;
-            form.file_dependent.Add(addFileCommand);
+            form.file_write_dependent.Add(addFileCommand);
 
             var removeFileCommand = new Command
             {
@@ -44,7 +43,7 @@ namespace BrutGui
             };
             removeFileCommand.Executed += commands.RemoveFilesCommand_Executed;
             removeFileCommand.Enabled = false;
-            form.selected_dependent.Add(removeFileCommand);
+            form.selected_write_dependent.Add(removeFileCommand);
 
             var extractFileCommand = new Command
             {
@@ -66,6 +65,17 @@ namespace BrutGui
             extractAllCommand.Enabled = false;
             form.file_dependent.Add(extractAllCommand);
 
+            // create menu
+            var closeFileCommand = new Command
+            {
+                MenuText = "&Close",
+                Shortcut = Application.Instance.CommonModifier | Keys.C,
+                ID = "CloseFileCommand"
+            };
+            closeFileCommand.Executed += commands.CloseFileCommand_Executed;
+            closeFileCommand.Enabled = false;
+            form.file_dependent.Add(closeFileCommand);
+
             var quitCommand = new Command
             {
                 MenuText = "&Quit",
@@ -81,6 +91,8 @@ namespace BrutGui
             fileMenu.Items.Add(removeFileCommand);
             fileMenu.Items.Add(extractFileCommand);
             fileMenu.Items.Add(extractAllCommand);
+            fileMenu.Items.Add(new SeparatorMenuItem());
+            fileMenu.Items.Add(closeFileCommand);
             if (Globals.mru.Count() > 0)
             {
                 fileMenu.Items.Add(new SeparatorMenuItem());

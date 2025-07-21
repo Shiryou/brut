@@ -22,7 +22,9 @@ namespace BrutGui
             Padding = new Eto.Drawing.Padding(0, 0, 0, 5)
         };
         public List<object> file_dependent = new();
+        public List<object> file_write_dependent = new();
         public List<object> selected_dependent = new();
+        public List<object> selected_write_dependent = new();
         public ListBox listBox = new();
         public Label fileInfo = new();
         public ImageView preview = new();
@@ -104,6 +106,11 @@ namespace BrutGui
             else
             {
                 this.Title = "Birthright Resource Utility - " + Globals.resourceName;
+
+                if (Globals.resource.IsReadOnly())
+                {
+                    this.Title += " (Read-Only)";
+                }
             }
             fileManager.Rows.Add(new TableRow(new TableCell(fileInfo, true))
             {
@@ -254,7 +261,7 @@ namespace BrutGui
             addButtonCmd.Executed += commands.AddFileCommand_Executed;
             add.Command = addButtonCmd;
             add.Height = 50;
-            file_dependent.Add(add);
+            file_write_dependent.Add(add);
 
             Button remove = new();
             remove.Text = "Remove a file";
@@ -262,7 +269,7 @@ namespace BrutGui
             removeButtonCmd.Executed += commands.RemoveFilesCommand_Executed;
             remove.Command = removeButtonCmd;
             remove.Height = 50;
-            selected_dependent.Add(remove);
+            selected_write_dependent.Add(remove);
 
             Button extract = new();
             extract.Text = "Extract selected";
@@ -286,10 +293,13 @@ namespace BrutGui
 
         public void ManageFileDependentFields(bool enabled)
         {
+            bool writeable = enabled && !Globals.resource.IsReadOnly();
+
             if (!enabled)
             {
                 ManageSelectedDependentFields(false);
             }
+
             foreach (object item in file_dependent)
             {
                 if (item is Control)
@@ -305,10 +315,28 @@ namespace BrutGui
                     ((MenuItem)item).Enabled = enabled;
                 }
             }
+
+            foreach (object item in file_write_dependent)
+            {
+                if (item is Control)
+                {
+                    ((Control)item).Enabled = writeable;
+                }
+                else if (item is Command)
+                {
+                    ((Command)item).Enabled = writeable;
+                }
+                else if (item is MenuItem)
+                {
+                    ((MenuItem)item).Enabled = writeable;
+                }
+            }
         }
 
         public void ManageSelectedDependentFields(bool enabled)
         {
+            bool writeable = enabled && !Globals.resource.IsReadOnly();
+
             foreach (object item in selected_dependent)
             {
                 if (item is Control)
@@ -318,6 +346,22 @@ namespace BrutGui
                 else if (item is Command)
                 {
                     ((Command)item).Enabled = enabled;
+                }
+            }
+
+            foreach (object item in selected_write_dependent)
+            {
+                if (item is Control)
+                {
+                    ((Control)item).Enabled = writeable;
+                }
+                else if (item is Command)
+                {
+                    ((Command)item).Enabled = writeable;
+                }
+                else if (item is MenuItem)
+                {
+                    ((MenuItem)item).Enabled = writeable;
                 }
             }
         }

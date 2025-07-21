@@ -55,6 +55,19 @@ namespace BrutGui
             form.Content = form.InitializeLayout();
         }
 
+        public void CloseFileCommand_Executed(object? sender, EventArgs e)
+        {
+            if (Globals.resource != null)
+            {
+                Globals.resource.Dispose();
+                Globals.resource = null;
+            }
+            Globals.resourceName = null;
+            form.ManageFileDependentFields(false);
+            form.Menu = form.menuBar = (new Menu(form)).Initialize();
+            form.Content = form.InitializeLayout();
+        }
+
         public void AddFileCommand_Executed(object? sender, EventArgs e)
         {
             OpenFileDialog openDialog = new() { };

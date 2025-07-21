@@ -58,6 +58,7 @@ namespace ResourceUtilityLib
         private readonly uint size_of_rheader = 36;
         private readonly uint size_of_direntry = 22;
 
+        private bool readOnly = false;
         private bool compress = true;
         private bool rotate = false;
         private bool restore = false;
@@ -76,7 +77,7 @@ namespace ResourceUtilityLib
         /// Loads the file and checks the file header and file index.
         /// </summary>
         /// <param name="filePath">The path to the resource file</param>
-        public ResourceUtility(string filePath) : this(File.Open(filePath, FileMode.OpenOrCreate)) { }
+        public ResourceUtility(string filePath) : this(OpenStream(filePath)) { }
 
         /// <summary>
         /// Loads the file and checks the file header and file index.
@@ -88,12 +89,16 @@ namespace ResourceUtilityLib
             directory = end_of_header;
             resources = 0;
             resource_file = new BinaryReader(fileStream, Encoding.UTF8, false);
+            if (!fileStream.CanRead)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            readOnly = !fileStream.CanWrite;
 
             if (resource_file.BaseStream.Length > 0)
             {
                 try
                 {
-
                     LoadFileHeader();
                     LoadDirectory();
                 }
@@ -104,6 +109,26 @@ namespace ResourceUtilityLib
                         throw;
                     }
                     throw new InvalidResourceException("A data read exception occured while loading the resource file.");
+                }
+            }
+        }
+
+        private static FileStream OpenStream(string filePath)
+        {
+            try
+            {
+                // Try to open with ReadWrite access
+                return File.Open(filePath, FileMode.OpenOrCreate);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                try
+                {
+                    return File.Open(filePath, FileMode.Open, FileAccess.Read);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    throw;
                 }
             }
         }
@@ -684,6 +709,11 @@ namespace ResourceUtilityLib
             resources = (uint)newDir.Count;
             SaveDirectory();
             SaveFileHeader();
+        }
+
+        public bool IsReadOnly()
+        {
+            return readOnly;
         }
 
         /// <summary>
