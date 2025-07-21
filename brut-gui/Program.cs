@@ -31,16 +31,16 @@ namespace BrutGui
 
         public static void LoadMRU()
         {
-            if (File.Exists("test.json"))
+            if (File.Exists("mru.json"))
             {
-                string jsonString = File.ReadAllText("test.json");
+                string jsonString = File.ReadAllText("mru.json");
                 Globals.mru = new MRU(Globals.mru.Size(), jsonString);
             }
         }
 
         public static void SaveMRU()
         {
-            string fileName = "test.json";
+            string fileName = "mru.json";
 
             File.WriteAllText(fileName, Globals.mru.ToJson());
         }
