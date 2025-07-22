@@ -87,7 +87,7 @@ namespace ResourceUtilityLib
         /// Loads the file and checks the file header and file index.
         /// </summary>
         /// <param name="fileStream">The stream of the resource file.</param>
-        public ResourceUtility(Stream fileStream, ILogger? logger)
+        public ResourceUtility(Stream fileStream, ILogger? logger = null)
         {
             LogHelper.SetLogger(logger);
             file_version = (uint)resutil_version;
