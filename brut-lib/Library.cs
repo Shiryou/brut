@@ -1,5 +1,9 @@
 ﻿using System.Text;
 
+using Microsoft.Extensions.Logging;
+
+using ResourceUtilityLib.Logging;
+
 namespace ResourceUtilityLib
 {
     public enum HashAlgorithm
@@ -77,14 +81,15 @@ namespace ResourceUtilityLib
         /// Loads the file and checks the file header and file index.
         /// </summary>
         /// <param name="filePath">The path to the resource file</param>
-        public ResourceUtility(string filePath) : this(OpenStream(filePath)) { }
+        public ResourceUtility(string filePath, ILogger? logger = null) : this(OpenStream(filePath), logger) { }
 
         /// <summary>
         /// Loads the file and checks the file header and file index.
         /// </summary>
         /// <param name="fileStream">The stream of the resource file.</param>
-        public ResourceUtility(Stream fileStream)
+        public ResourceUtility(Stream fileStream, ILogger? logger)
         {
+            LogHelper.SetLogger(logger);
             file_version = (uint)resutil_version;
             directory = end_of_header;
             resources = 0;

@@ -1,4 +1,8 @@
-﻿using ResourceUtilityLib;
+﻿using Microsoft.Extensions.Logging;
+
+using ResourceUtilityLib;
+
+using Serilog;
 
 enum Operations
 {
@@ -16,6 +20,8 @@ class ResourceUtilityCli
 {
     static void Main(string[] args)
     {
+        var logger = InitLogging();
+
         if (args.Length < 2)
         {
             Console.WriteLine("Usage: resutil resfile-name [[s nnnnn] [c] [n] [r] [u] [+|-|e sourcefile-name ]] |");
@@ -45,7 +51,7 @@ class ResourceUtilityCli
         ResourceUtility ru;
         try
         {
-            ru = new ResourceUtility(resfile);
+            ru = new ResourceUtility(resfile, logger);
         }
         catch (FileNotFoundException)
         {
@@ -193,5 +199,25 @@ class ResourceUtilityCli
     static void ExtractAll(ResourceUtility ru)
     {
         ru.ExtractAll();
+    }
+
+    public static Microsoft.Extensions.Logging.ILogger<ResourceUtility> InitLogging()
+    {
+        // Configure Serilog to write to a file
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Verbose()
+            .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}")
+            .WriteTo.File("brut.log", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}")
+            .CreateLogger();
+
+        // Wrap Serilog in Microsoft's logging abstraction
+        using var loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder.AddSerilog(Log.Logger, dispose: true);
+        });
+
+        // Create a logger instance for the library class
+        var logger = loggerFactory.CreateLogger<ResourceUtility>();
+        return logger;
     }
 }

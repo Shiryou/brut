@@ -1,4 +1,6 @@
 ﻿using System;
+
+using ResourceUtilityLib.Logging;
 namespace ResourceUtilityLib
 {
     /// <summary>
@@ -18,6 +20,7 @@ namespace ResourceUtilityLib
         {
             string[] parts = filename.Split('\\');
             string name = parts[parts.Length - 1] + "\0"; // add the NULL byte for compatibility
+            LogHelper.Debug("Getting CRC hash of {name}", parts[parts.Length - 1]);
 
             uint accumCRC = 0;
             uint accumXOR = 0;
@@ -42,7 +45,10 @@ namespace ResourceUtilityLib
                 }
             }
 
-            return ((0x00000000 | (accumXOR) << 16) | (ushort)(accumCRC & 0xFFFF));
+            uint crc = ((0x00000000 | (accumXOR) << 16) | (ushort)(accumCRC & 0xFFFF));
+            LogHelper.Verbose("Calculated CRC {crc}", crc.ToString("X"));
+
+            return crc;
         }
 
         /// <summary>
@@ -54,6 +60,7 @@ namespace ResourceUtilityLib
         {
             string[] parts = filename.Split('\\');
             string name = parts[parts.Length - 1];
+            LogHelper.Debug("Getting ID hash of {name}", parts[parts.Length - 1]);
 
             uint result = 0;
 
@@ -71,6 +78,9 @@ namespace ResourceUtilityLib
                 found_digit = true;
                 result = (result * 10) + (uint)(c - '0');
             }
+
+            LogHelper.Verbose("Calculated ID {result}", result);
+
             return result;
         }
     }

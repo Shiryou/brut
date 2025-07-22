@@ -4,6 +4,8 @@ using System.IO;
 
 using Eto.Forms;
 
+using Serilog;
+
 using ResourceUtilityLib;
 
 namespace BrutGui
@@ -34,11 +36,12 @@ namespace BrutGui
             }
             if (filename != "")
             {
+                Log.Information("Loading RES file {filename}", filename);
                 if (Globals.resource != null)
                 {
                     Globals.resource.Dispose();
                 }
-                Globals.resource = new ResourceUtility(filename);
+                Globals.resource = new ResourceUtility(filename, Globals.logger);
                 Globals.resourceName = Path.GetFileName(filename).ToUpper();
                 Globals.mru.Add(filename);
                 if (form.restore)
@@ -57,6 +60,7 @@ namespace BrutGui
 
         public void CloseFileCommand_Executed(object? sender, EventArgs e)
         {
+            Log.Information("Closing RES file {filename}", Globals.resourceName);
             if (Globals.resource != null)
             {
                 Globals.resource.Dispose();
