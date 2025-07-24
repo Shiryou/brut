@@ -19,8 +19,8 @@ namespace ResourceUtilityLib
         public static uint HashCRC(string filename)
         {
             string[] parts = filename.Split('\\');
-            string name = parts[parts.Length - 1] + "\0"; // add the NULL byte for compatibility
-            LogHelper.Debug("Getting CRC hash of {name}", parts[parts.Length - 1]);
+            string name = parts[^1] + "\0"; // add the NULL byte for compatibility
+            LogHelper.Debug("Getting CRC hash of {name}", parts[^1]);
 
             uint accumCRC = 0;
             uint accumXOR = 0;
@@ -59,8 +59,8 @@ namespace ResourceUtilityLib
         public static uint HashID(string filename)
         {
             string[] parts = filename.Split('\\');
-            string name = parts[parts.Length - 1];
-            LogHelper.Debug("Getting ID hash of {name}", parts[parts.Length - 1]);
+            string name = parts[^1];
+            LogHelper.Debug("Getting ID hash of {name}", parts[^1]);
 
             uint result = 0;
 

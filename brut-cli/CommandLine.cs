@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 
 using ResourceUtilityLib;
+using ResourceUtilityLib.Logging;
 
 using Serilog;
+using Serilog.Events;
 
 enum Operations
 {
@@ -20,14 +22,14 @@ class ResourceUtilityCli
 {
     static void Main(string[] args)
     {
-        var logger = InitLogging();
+        var logger = CheckLogging(ref args);
 
         if (args.Length < 2)
         {
-            Console.WriteLine("Usage: resutil resfile-name [[s nnnnn] [c] [n] [r] [u] [+|-|e sourcefile-name ]] |");
+            Console.WriteLine("Usage: resutil resfile-name [[s nnnnn] [c] [n] [r] [u] [+|-|e sourcefile-name ]] [--log logfile] [--log-level level] |");
             Console.WriteLine(" [@ respfile-name] | [l] | [v]");
             Console.WriteLine("   +  add file");
-            Console.WriteLine("   - remove file");
+            Console.WriteLine("   -  remove file");
             Console.WriteLine("   c  compress resources (default)");
             Console.WriteLine("   e  extract file");
             Console.WriteLine("   x  extract all files");
@@ -41,7 +43,10 @@ class ResourceUtilityCli
             Console.WriteLine("   u  do not compress resources");
             Console.WriteLine("   v  verify resource file");
             Console.WriteLine("   @  respfile run commands in respfile");
-            Console.WriteLine("Note: Compression and respfiles are not yet supported.");
+            Console.WriteLine("");
+            Console.WriteLine("   --log  create a log file at the given location.");
+            Console.WriteLine("   --log-level  create a log file at the given location.");
+            Console.WriteLine("Note: Compression, respfiles, and derotating a PCX are not yet supported.");
             return;
         }
 
@@ -134,20 +139,26 @@ class ResourceUtilityCli
         {
             case Operations.OpAdd:
                 Add(ru, filename);
+                LogHelper.Info("Adding {0} to {0}", filename, resfile);
                 break;
             case Operations.OpRemove:
+                LogHelper.Info("Removing {0} from {0}", filename, resfile);
                 Remove(ru, filename);
                 break;
             case Operations.OpExtract:
+                LogHelper.Info("Extracting {0} from {0}", filename, resfile);
                 Extract(ru, filename);
                 break;
             case Operations.OpExtractAll:
+                LogHelper.Info("Extracting all files in {0}", resfile);
                 ExtractAll(ru);
                 break;
             case Operations.OpList:
+                LogHelper.Info("Listing files in {0}", resfile);
                 List(ru);
                 break;
             case Operations.OpVerify:
+                LogHelper.Info("Verifying files in {0}", resfile);
                 List(ru, true);
                 break;
         }
@@ -186,13 +197,14 @@ class ResourceUtilityCli
         try
         {
             ResourceHeader resource = ru.GetFileInformation(filename);
+            Log.Error("\nFile {0} was not found in the resource file.", filename);
             Console.Write(String.Format("Extracting {0} containing {1} bytes... ", filename, resource.cbUncompressedData));
             ru.ExtractFile(filename);
             Console.WriteLine("Succeeded!");
         }
         catch (FileNotFoundException)
         {
-            Console.WriteLine(String.Format("\nFile {0} was not found in the resource file.", filename));
+            Log.Error("\nFile {0} was not found in the resource file.", filename);
         }
     }
 
@@ -201,19 +213,82 @@ class ResourceUtilityCli
         ru.ExtractAll();
     }
 
-    public static Microsoft.Extensions.Logging.ILogger<ResourceUtility> InitLogging()
+    static ILogger<ResourceUtility> CheckLogging(ref string[] args)
     {
-        // Configure Serilog to write to a file
+        string? logFile = null;
+        LogEventLevel? logLevel = null;
+        List<string> arglist = new();
+        string[] new_args = new string[args.Length];
+
+        for (int index = 0; index < args.Length; index++)
+        {
+            switch (args[index])
+            {
+                case "--log":
+                    LogHelper.Info("Enabling log file {0}", args[index + 1]);
+                    logFile = args[index + 1];
+                    index++;
+                    break;
+                case "--log-level":
+                    LogHelper.Info("Enabling log level {0}", args[index + 1]);
+                    switch (args[index + 1].ToUpper())
+                    {
+                        case "VERBOSE":
+                            logLevel = LogEventLevel.Verbose;
+                            break;
+                        case "DEBUG":
+                            logLevel = LogEventLevel.Debug;
+                            break;
+                        case "INFORMATION":
+                            logLevel = LogEventLevel.Information;
+                            break;
+                        case "WARNING":
+                            logLevel = LogEventLevel.Warning;
+                            break;
+                        case "ERROR":
+                            logLevel = LogEventLevel.Error;
+                            break;
+                        case "FATAL":
+                            logLevel = LogEventLevel.Fatal;
+                            break;
+                    }
+                    index++;
+                    break;
+                default:
+                    arglist.Add(args[index]);
+                    break;
+            }
+        }
+        args = arglist.ToArray();
+        return InitLogging(logFile, logLevel);
+    }
+
+    public static ILogger<ResourceUtility> InitLogging(string? file = null, LogEventLevel? level = null)
+    {
+        LogEventLevel fileLevel = LogEventLevel.Debug;
+        LogEventLevel consoleLevel = LogEventLevel.Warning;
+        string logFile = "logs/brut-.log";
+        if (level != null)
+        {
+            fileLevel = consoleLevel = (LogEventLevel)level;
+        }
+        if (file != null)
+        {
+            logFile = file;
+        }
+
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Verbose()
-            .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}")
-            .WriteTo.File("brut.log", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}")
+            .Enrich.WithProperty("SourceContext", "ResourceUtilityCli")
+            .WriteTo.Console(outputTemplate: "{Message:lj}{NewLine}{Exception}", restrictedToMinimumLevel: consoleLevel)
+            .WriteTo.File(logFile, rollingInterval: RollingInterval.Day, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}", restrictedToMinimumLevel: fileLevel, shared: true)
             .CreateLogger();
+
+        LogHelper.Info("Logging level {0} to {1}, and {2} to console", fileLevel, logFile, consoleLevel);
 
         // Wrap Serilog in Microsoft's logging abstraction
         using var loggerFactory = LoggerFactory.Create(builder =>
         {
-            builder.AddSerilog(Log.Logger, dispose: true);
+            builder.AddSerilog(Log.Logger);
         });
 
         // Create a logger instance for the library class

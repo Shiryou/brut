@@ -53,9 +53,9 @@ namespace BrutGui
         {
             // Configure Serilog to write to a file
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
+                .MinimumLevel.Debug()
                 .Enrich.WithProperty("SourceContext", "BrutGui.Program")
-                .WriteTo.File("brut.log", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {SourceContext} - {Message:lj}{NewLine}{Exception}")
+                .WriteTo.File("brut.log", rollingInterval: RollingInterval.Day, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
 
             // Wrap Serilog in Microsoft's logging abstraction

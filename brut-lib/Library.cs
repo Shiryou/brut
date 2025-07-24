@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 using Microsoft.Extensions.Logging;
 
@@ -120,6 +121,7 @@ namespace ResourceUtilityLib
 
         private static FileStream OpenStream(string filePath)
         {
+            LogHelper.Info("Opening {filePath}", filePath);
             try
             {
                 // Try to open with ReadWrite access
@@ -147,20 +149,24 @@ namespace ResourceUtilityLib
         /// <exception cref="IndexOutOfRangeException"></exception>
         public void LoadFileHeader()
         {
+            LogHelper.Verbose("Loading file header.");
             resource_file.BaseStream.Position = 0;
 
             file_version = resource_file.ReadUInt32();
             if (file_version != resutil_version)
             {
+                LogHelper.Error("Unsupported RES file version ({file_version}).", file_version);
                 throw new UnsupportedVersionException(file_version);
             }
             directory = resource_file.ReadUInt32();
             if (directory > resource_file.BaseStream.Length)
             {
+                LogHelper.Error("Attempting to read a directory location past the end of the file.");
                 throw new IndexOutOfRangeException();
             }
 
             resources = resource_file.ReadUInt32();
+            LogHelper.Info("File version: {file_version}; directory location: {directory}; number of resources: {resources}", file_version, directory, resources);
         }
 
         /// <summary>
@@ -168,7 +174,8 @@ namespace ResourceUtilityLib
         /// </summary>
         public void SaveFileHeader()
         {
-            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            LogHelper.Verbose("Saving file header.");
+            BinaryWriter resfile = new(resource_file.BaseStream, Encoding.UTF8, true);
             resfile.BaseStream.Position = 0;
             resfile.Write((UInt32)file_version);
             resfile.Write((UInt32)directory);
@@ -192,6 +199,7 @@ namespace ResourceUtilityLib
                 entry.offset = resource_file.ReadUInt32();
                 if (entry.offset > resource_file.BaseStream.Length)
                 {
+                    LogHelper.Error("Directory entry offset is past the end of the file.");
                     throw new IndexOutOfRangeException();
                 }
                 entry.extension = resource_file.ReadByte();
@@ -206,7 +214,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void SaveDirectory()
         {
-            BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true);
+            BinaryWriter resfile = new(resource_file.BaseStream, Encoding.UTF8, true);
             resfile.BaseStream.Position = directory;
             for (int i = 0; i < resources; i++)
             {
@@ -227,6 +235,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void UseCRCHash()
         {
+            LogHelper.Verbose("Setting hashing algorithm: CRC.");
             hash_alg = HashAlgorithm.HashCrc;
         }
 
@@ -235,6 +244,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void UseIDHash()
         {
+            LogHelper.Verbose("Setting hashing algorithm: ID.");
             hash_alg = HashAlgorithm.HashId;
         }
 
@@ -251,6 +261,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void EnableCompression()
         {
+            LogHelper.Verbose("Enabling compression.");
             compress = true;
         }
 
@@ -259,6 +270,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void DisableCompression()
         {
+            LogHelper.Verbose("Disabling compression.");
             compress = false;
         }
 
@@ -267,6 +279,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void EnablePCXRotation()
         {
+            LogHelper.Verbose("Enabling PCX rotation.");
             rotate = true;
         }
 
@@ -275,6 +288,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void DisablePCXRotation()
         {
+            LogHelper.Verbose("Disabling PCX rotation.");
             rotate = false;
         }
 
@@ -283,6 +297,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void RestorePCX()
         {
+            LogHelper.Verbose("Enabling attempting to restore PCX.");
             restore = true;
         }
 
@@ -291,6 +306,7 @@ namespace ResourceUtilityLib
         /// </summary>
         public void RetainBitmap()
         {
+            LogHelper.Verbose("Disable attempting to restore PCX. We'll just output the bitmap.");
             restore = false;
         }
 
@@ -349,6 +365,7 @@ namespace ResourceUtilityLib
         /// <param name="header">The metadata for the resource to be added.</param
         public void AddDirectoryEntry(ResourceHeader header)
         {
+            LogHelper.Verbose("Adding a resource to the directory.");
             Array.Resize<DirectoryEntry>(ref dirEntries, (int)resources + 1);
 
             dirEntries[(int)resources] = new DirectoryEntry();
@@ -369,6 +386,7 @@ namespace ResourceUtilityLib
         /// <exception cref="InvalidResourceException"></exception>
         public ResourceHeader LoadResourceHeader(uint offset)
         {
+            LogHelper.Verbose("Loading a resource header at offset {offset}.", offset);
             resource_file.BaseStream.Position = offset;
 
             ResourceHeader header;
@@ -378,6 +396,7 @@ namespace ResourceUtilityLib
                 header.startcode = resource_file.ReadUInt32();
                 if (header.startcode != resource_start_code)
                 {
+                    LogHelper.Error("Invalid resource start code {0}.", header.startcode);
                     throw new InvalidResourceException("Invalid resource start code.");
                 }
 
@@ -386,6 +405,7 @@ namespace ResourceUtilityLib
                 header.cbUncompressedData = resource_file.ReadUInt32();
                 if (header.cbCompressedData > header.cbUncompressedData)
                 {
+                    LogHelper.Error("The resource compressed data ({0}) is larger than the uncompressed data ({1}).", header.cbCompressedData, header.cbUncompressedData);
                     throw new InvalidResourceException("The resource compressed data is larger than uncompressed data.");
                 }
                 header.hash = resource_file.ReadUInt32();
@@ -402,6 +422,7 @@ namespace ResourceUtilityLib
                 }
                 else
                 {
+                    LogHelper.Error(ex, "A data read exception occured while reading a resource.");
                     throw new InvalidResourceException("A data read exception occured while reading a resource.", ex);
                 }
             }
@@ -491,14 +512,14 @@ namespace ResourceUtilityLib
         /// <param name="fileStream">A stream of file data to add.</param>
         public void AddFile(string file, Stream? fileStream = null)
         {
-            ResourceHeader header = new ResourceHeader();
+            ResourceHeader header = new();
             string filename = Path.GetFileName(file).ToUpper();
             string extension = Path.GetExtension(filename)[1..];
             if (fileStream == null)
             {
                 fileStream = File.Open(file, FileMode.Open);
             }
-            BinaryReader read_file = new BinaryReader(fileStream, Encoding.UTF8, false);
+            BinaryReader read_file = new(fileStream, Encoding.UTF8, false);
 
             header.flags = 0;
             header.cbUncompressedData = (uint)read_file.BaseStream.Length;
@@ -507,6 +528,7 @@ namespace ResourceUtilityLib
 
             if (header.cbUncompressedData > max_resource_size)
             {
+                LogHelper.Error("File size ({0}) is greater than max ({1}): not adding to file", header.cbUncompressedData, max_resource_size);
                 throw new Exception(String.Format("File size ({0}) is greater than max ({1}): not adding to file", header.cbUncompressedData, max_resource_size));
             }
 
@@ -542,33 +564,31 @@ namespace ResourceUtilityLib
                 }
             }
 
-            using (BinaryWriter resfile = new BinaryWriter(resource_file.BaseStream, Encoding.UTF8, true))
+            using BinaryWriter resfile = new(resource_file.BaseStream, Encoding.UTF8, true);
+            byte[] compressed_data;
+            if (compress)
             {
-                byte[] compressed_data;
-                if (compress)
-                {
-                    compressed_data = LZSS.Encode(uncompressed_data);
-                    header.cbCompressedData = (uint)compressed_data.Length;
-                }
-                else
-                {
-                    compressed_data = new byte[0];
-                    header.cbCompressedData = header.cbUncompressedData;
-                }
+                compressed_data = LZSS.Encode(uncompressed_data);
+                header.cbCompressedData = (uint)compressed_data.Length;
+            }
+            else
+            {
+                compressed_data = new byte[0];
+                header.cbCompressedData = header.cbUncompressedData;
+            }
 
-                if (header.cbCompressedData >= header.cbUncompressedData)
-                {
-                    header.compressionCode = (byte)CompressionTypes.NoCompression;
-                    header.cbCompressedData = header.cbUncompressedData;
-                    header.cbChunk = size_of_rheader + header.cbCompressedData;
-                    AddFile(header, uncompressed_data);
-                }
-                else
-                {
-                    header.compressionCode = (byte)CompressionTypes.LZSSCompression;
-                    header.cbChunk = size_of_rheader + header.cbCompressedData;
-                    AddFile(header, compressed_data);
-                }
+            if (header.cbCompressedData >= header.cbUncompressedData)
+            {
+                header.compressionCode = (byte)CompressionTypes.NoCompression;
+                header.cbCompressedData = header.cbUncompressedData;
+                header.cbChunk = size_of_rheader + header.cbCompressedData;
+                AddFile(header, uncompressed_data);
+            }
+            else
+            {
+                header.compressionCode = (byte)CompressionTypes.LZSSCompression;
+                header.cbChunk = size_of_rheader + header.cbCompressedData;
+                AddFile(header, compressed_data);
             }
         }
 
