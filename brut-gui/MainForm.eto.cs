@@ -176,11 +176,11 @@ namespace BrutGui
             );
             if (selected.cbCompressedData != selected.cbUncompressedData)
             {
-                metadata += String.Format("File size: {0}\nCompressed size: {1}", selected.cbUncompressedData, selected.cbCompressedData);
+                metadata += String.Format("File size: {0}\nCompressed size: {1}", FormatFileSize(selected.cbUncompressedData), FormatFileSize(selected.cbCompressedData));
             }
             else
             {
-                metadata += String.Format("File size: {0}", selected.cbUncompressedData);
+                metadata += String.Format("File size: {0}", FormatFileSize(selected.cbUncompressedData));
             }
 
             switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
@@ -198,6 +198,21 @@ namespace BrutGui
             }
 
             fileInfo.Text = metadata;
+        }
+
+        private string FormatFileSize(uint len)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+
+            // Adjust the format string to your preferences. For example "{0:0.#}{1}" would
+            // show a single decimal place, and no space.
+            return String.Format("{0:0.##} {1}", len, sizes[order]);
         }
 
         private void PreviewPCX(ref string metadata)
