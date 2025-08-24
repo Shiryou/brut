@@ -15,6 +15,7 @@ namespace BrutGui
         public static ResourceUtility resource = null;
         public static string resourceName = null;
         public static MRU mru = new MRU(10);
+        public static string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "brut");
     }
 
     class Program
@@ -28,25 +29,9 @@ namespace BrutGui
                 Globals.resource = new ResourceUtility(args[0], Globals.logger);
                 Globals.resourceName = Path.GetFileName(args[0]).ToUpper();
             }
-            LoadMRU();
+            Globals.mru.Load(Path.Combine(Globals.appData, "mru.json"));
             new Application(Eto.Platform.Detect).Run(new MainForm());
-            SaveMRU();
-        }
-
-        public static void LoadMRU()
-        {
-            if (File.Exists("mru.json"))
-            {
-                string jsonString = File.ReadAllText("mru.json");
-                Globals.mru = new MRU(Globals.mru.Size(), jsonString);
-            }
-        }
-
-        public static void SaveMRU()
-        {
-            string fileName = "mru.json";
-
-            File.WriteAllText(fileName, Globals.mru.ToJson());
+            Globals.mru.Save(Path.Combine(Globals.appData, "mru.json"));
         }
 
         public static void InitLogging()
@@ -55,7 +40,7 @@ namespace BrutGui
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .Enrich.WithProperty("SourceContext", "BrutGui.Program")
-                .WriteTo.File("brut.log", rollingInterval: RollingInterval.Day, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}")
+                .WriteTo.File(Path.Combine(Globals.appData, "brut-.log"), rollingInterval: RollingInterval.Day, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
 
             // Wrap Serilog in Microsoft's logging abstraction

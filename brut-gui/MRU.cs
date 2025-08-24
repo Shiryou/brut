@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 
@@ -16,14 +17,7 @@ namespace BrutGui
             _mru = new string[_size];
             _count = 0;
 
-            if (json != null)
-            {
-                string[] temp = JsonSerializer.Deserialize<string[]>(json);
-                for (int i = temp.Count() - 1; i >= 0; i--)
-                {
-                    Add(temp[i]);
-                }
-            }
+            FromJson(json);
         }
 
         public MRU(string json)
@@ -85,9 +79,51 @@ namespace BrutGui
             return array;
         }
 
+        public void FromJson(string json)
+        {
+            if (json != null)
+            {
+                string[] temp = JsonSerializer.Deserialize<string[]>(json);
+                for (int i = temp.Count() - 1; i >= 0; i--)
+                {
+                    Add(temp[i]);
+                }
+            }
+        }
+
         public string ToJson()
         {
             return JsonSerializer.Serialize(ToArray());
+        }
+
+        public bool Load(string path = "mru.json")
+        {
+            _mru = new string[_size];
+            _count = 0;
+
+            if (File.Exists(path))
+            {
+                string json = File.ReadAllText(path);
+                FromJson(json);
+                return true;
+            }
+            return false;
+        }
+
+        public bool Save(string path = "mru.json")
+        {
+            if (_count > 0)
+            {
+                if (string.IsNullOrEmpty(path))
+                {
+                    path = "mru.json";
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                File.WriteAllText(path, ToJson());
+                return true;
+            }
+            return false;
         }
     }
 }

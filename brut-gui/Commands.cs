@@ -44,6 +44,7 @@ namespace BrutGui
                 Globals.resource = new ResourceUtility(filename, Globals.logger);
                 Globals.resourceName = Path.GetFileName(filename).ToUpper();
                 Globals.mru.Add(filename);
+                Globals.mru.Save(Path.Combine(Globals.appData, "mru.json"));
                 if (form.restore)
                 {
                     Globals.resource.RestorePCX();
