@@ -405,6 +405,7 @@ namespace ResourceUtilityLib
             int count = 1;
             while (
                 data.BaseStream.Position < data.BaseStream.Length &&
+                (data.BaseStream.Position - bitmap_header_length) % header.Width != 0 &&
                 data.ReadByte() == start &&
                 count < max_run)
             {

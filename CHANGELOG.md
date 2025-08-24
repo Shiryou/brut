@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support opening read-only files
 - Fix 'Extract all' bug resulting in 0 byte files
+- Lib: Properly run-length encode during PCX restoration
 
 ## [0.1.0] - 2024-10-29
 
