@@ -108,14 +108,13 @@ namespace BrutGui
 
         public void ExtractAllFilesCommand_Executed(object? sender, EventArgs e)
         {
+            string currentDirectory = Directory.GetCurrentDirectory();
             SelectFolderDialog saveDialog = new() { };
             string[] types = ResourceUtility.GetSupportedExtensions();
             saveDialog.ShowDialog(form);
-            foreach (ResourceHeader item in Globals.resource.ListContents())
-            {
-                string filePath = saveDialog.Directory + Path.DirectorySeparatorChar + ResourceUtility.CharArrayToString(item.filename);
-                Globals.resource.SaveResourceToFile(filePath, Globals.resource.GetResourceData(item));
-            }
+            Directory.SetCurrentDirectory(saveDialog.Directory);
+            Globals.resource.ExtractAll();
+            Directory.SetCurrentDirectory(currentDirectory);
         }
 
         public void TogglePCXRestore_Executed(object? sender, EventArgs e)
