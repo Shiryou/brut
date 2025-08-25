@@ -11,6 +11,8 @@ using LibVLCSharp.Shared;
 
 using ResourceUtilityLib;
 
+using Serilog;
+
 namespace BrutGui
 {
     partial class MainForm : Form
@@ -76,7 +78,7 @@ namespace BrutGui
             }
             else
             {
-                fileInfo.Text = String.Format("Version: {0}\nResources: {1}", Globals.resource.FileVersion(), Globals.resource.Count());
+                fileInfo.Text = GetArchiveInfo();
                 ManageFileDependentFields(true);
 
                 foreach (var file in Globals.resource.ListContents())
@@ -131,6 +133,70 @@ namespace BrutGui
             return layout;
         }
 
+        public string GetArchiveInfo()
+        {
+            return String.Format(
+                "Resource File\n" + 
+                "Version: {0}\n" +
+                "Resources: {1}",
+                Globals.resource.FileVersion(),
+                Globals.resource.Count());
+        }
+
+        public string GetFileInfo()
+        {
+            string metadata = String.Format(
+                "Resource\n" +
+                "Filename: {2}\n" +
+                "Compression: {3}\n" +
+                "Hashed with ID: {4}\n" +
+                "Rotated: {5}\n",
+                Globals.resource.FileVersion(),
+                Globals.resource.Count(),
+                ResourceUtility.CharArrayToString(selected.filename),
+                ResourceUtility.GetCompressionType(selected),
+                ResourceUtility.UsesIDHash(selected),
+                (selected.flags & 2) == 2
+            );
+            if (selected.cbCompressedData != selected.cbUncompressedData)
+            {
+                metadata += String.Format("File size: {0}\nCompressed size: {1}", FormatFileSize(selected.cbUncompressedData), FormatFileSize(selected.cbCompressedData));
+            }
+            else
+            {
+                metadata += String.Format("File size: {0}", FormatFileSize(selected.cbUncompressedData));
+            }
+
+            Log.Information("{0} {1}", selected.extension, ResourceUtility.GetSupportedExtensions()[selected.extension]);
+            switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
+            {
+                case "PCX":
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        if ((selected.flags & 2) == 2)
+                        {
+                            metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
+                        }
+                    }
+                    else
+                    {
+                        metadata += "\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
+                    }
+                    break;
+
+                case "WAV":
+                    if (LibVLC == null)
+                    {
+                        metadata += "\n\nWAV previews failed to load.";
+                    }
+                    break;
+                default:
+                    metadata += "\n\nThis format currently doesn't support previews.";
+                    break;
+            }
+            return metadata;
+        }
+
         public void ShowFileInfo(object? sender, EventArgs e)
         {
             if (listBox.SelectedValue == null)
@@ -160,46 +226,24 @@ namespace BrutGui
                 selected = Globals.resource.GetFileInformation(listBox.SelectedValue.ToString());
             }
 
-            string metadata = String.Format(
-                "Resource File\n" +
-                "Version: {0}\n" +
-                "Resources: {1}\n\n" +
-                "Resource\n" +
-                "Filename: {2}\n" +
-                "Compression: {3}\n" +
-                "Hashed with ID: {4}\n" +
-                "Rotated: {5}\n",
-                Globals.resource.FileVersion(),
-                Globals.resource.Count(),
-                ResourceUtility.CharArrayToString(selected.filename),
-                ResourceUtility.GetCompressionType(selected),
-                ResourceUtility.UsesIDHash(selected),
-                (selected.flags & 2) == 2
-            );
-            if (selected.cbCompressedData != selected.cbUncompressedData)
-            {
-                metadata += String.Format("File size: {0}\nCompressed size: {1}", FormatFileSize(selected.cbUncompressedData), FormatFileSize(selected.cbCompressedData));
-            }
-            else
-            {
-                metadata += String.Format("File size: {0}", FormatFileSize(selected.cbUncompressedData));
-            }
-
             switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
             {
                 case "PCX":
-                    PreviewPCX(ref metadata);
+                    PreviewPCX();
                     break;
 
                 case "WAV":
-                    PreviewWAV(ref metadata);
+                    PreviewWAV();
                     break;
                 default:
-                    metadata += "\n\nThis format currently doesn't support previews.";
                     break;
             }
 
-            fileInfo.Text = metadata;
+            string archive_metadata = GetArchiveInfo();
+            string file_metadata = GetFileInfo();
+
+            fileInfo.Text = archive_metadata + "\n\n" + file_metadata;
+            Log.Information(file_metadata);
         }
 
         private string FormatFileSize(uint len)
@@ -217,7 +261,7 @@ namespace BrutGui
             return String.Format("{0:0.##} {1}", len, sizes[order]);
         }
 
-        private void PreviewPCX(ref string metadata)
+        private void PreviewPCX()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -236,24 +280,18 @@ namespace BrutGui
                 MagickImage image = new(data, MagickFormat.Pcx);
                 image.Format = MagickFormat.Bmp;
                 preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
-
-                if ((selected.flags & 2) == 2)
-                {
-                    metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
-                }
             }
             else
             {
                 preview.Image = null;
-                metadata += "\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
             }
         }
 
-        private void PreviewWAV(ref string metadata)
+        private void PreviewWAV()
         {
             if (LibVLC == null)
             {
-                metadata += "\n\nWAV previews failed to load.";
+                Log.Error("LibVLC did not load. If you are using Linux, please ensure libvlc-dev is installed.");
                 return;
             }
 
