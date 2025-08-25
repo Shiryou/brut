@@ -120,14 +120,14 @@ namespace BrutGui
 
         public SubMenuItem BuildSettingsMenu()
         {
-            CheckMenuItem restorePCX = new()
+            form.restorePCX = new()
             {
                 Text = "Attempt &PCX recovery",
                 Shortcut = Application.Instance.CommonModifier | Keys.P,
-                ID = "RecoverPCX"
+                ID = "RecoverPCX",
+                Checked = form.restorePCX.Checked
             };
-            restorePCX.Checked = form.restore;
-            restorePCX.CheckedChanged += commands.TogglePCXRestore_Executed;
+            form.restorePCX.CheckedChanged += commands.TogglePCXRestore_Executed;
             CheckMenuItem autoplay = new()
             {
                 Text = "Autoplay &WAV files",
@@ -138,7 +138,7 @@ namespace BrutGui
             autoplay.CheckedChanged += commands.ToggleWAVAutoplay_Executed;
 
             SubMenuItem settingsMenu = new() { Text = "&Options" };
-            settingsMenu.Items.Add(restorePCX);
+            settingsMenu.Items.Add(form.restorePCX);
             settingsMenu.Items.Add(autoplay);
 
             return settingsMenu;

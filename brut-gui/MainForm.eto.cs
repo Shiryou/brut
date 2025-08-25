@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Media;
 using System.Runtime.InteropServices;
 
 using Eto.Forms;
@@ -14,7 +13,7 @@ using ResourceUtilityLib;
 
 namespace BrutGui
 {
-    partial class MainForm : Eto.Forms.Form
+    partial class MainForm : Form
     {
         public TableLayout fileManager = new()
         {
@@ -33,7 +32,10 @@ namespace BrutGui
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
-        public bool restore = true;
+        public CheckMenuItem restorePCX = new()
+        {
+            Checked = true
+        };
         public bool autoplay = false;
 
         void InitializeComponent()

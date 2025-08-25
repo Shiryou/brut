@@ -4,9 +4,9 @@ using System.IO;
 
 using Eto.Forms;
 
-using Serilog;
-
 using ResourceUtilityLib;
+
+using Serilog;
 
 namespace BrutGui
 {
@@ -45,7 +45,7 @@ namespace BrutGui
                 Globals.resourceName = Path.GetFileName(filename).ToUpper();
                 Globals.mru.Add(filename);
                 Globals.mru.Save(Path.Combine(Globals.appData, "mru.json"));
-                if (form.restore)
+                if (form.restorePCX.Checked)
                 {
                     Globals.resource.RestorePCX();
                 }
@@ -103,7 +103,11 @@ namespace BrutGui
             saveDialog.Filters.Add("All files|.*");
             saveDialog.Filters.Add("Birthright Resource files|" + String.Join(";.", types));
             saveDialog.FileName = ResourceUtility.CharArrayToString(form.selected.filename);
-            saveDialog.ShowDialog(form);
+            DialogResult result = saveDialog.ShowDialog(form);
+            if (result != DialogResult.Ok || string.IsNullOrWhiteSpace(saveDialog.FileName))
+            {
+                return;
+            }
             Globals.resource.SaveResourceToFile(saveDialog.FileName, Globals.resource.GetResourceData(form.selected));
         }
 
@@ -112,7 +116,11 @@ namespace BrutGui
             string currentDirectory = Directory.GetCurrentDirectory();
             SelectFolderDialog saveDialog = new() { };
             string[] types = ResourceUtility.GetSupportedExtensions();
-            saveDialog.ShowDialog(form);
+            DialogResult result = saveDialog.ShowDialog(form);
+            if (result != DialogResult.Ok || string.IsNullOrWhiteSpace(saveDialog.Directory))
+            {
+                return;
+            }
             Directory.SetCurrentDirectory(saveDialog.Directory);
             Globals.resource.ExtractAll();
             Directory.SetCurrentDirectory(currentDirectory);
@@ -120,10 +128,9 @@ namespace BrutGui
 
         public void TogglePCXRestore_Executed(object? sender, EventArgs e)
         {
-            form.restore = !form.restore;
             if (Globals.resource != null)
             {
-                if (form.restore)
+                if (form.restorePCX.Checked)
                 {
                     Globals.resource.RetainBitmap();
                 }
@@ -132,11 +139,7 @@ namespace BrutGui
                     Globals.resource.RestorePCX();
                 }
             }
-            if (sender != null)
-            {
-                CheckMenuItem menuItem = (CheckMenuItem)sender;
-                menuItem.Checked = form.restore;
-            }
+
         }
 
         public void ToggleWAVAutoplay_Executed(object? sender, EventArgs e)
