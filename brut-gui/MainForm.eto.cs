@@ -7,7 +7,7 @@ using Eto.Forms;
 
 using ImageMagick;
 
-using LibVLCSharp.Shared;
+using Microsoft.Xna.Framework.Audio;
 
 using ResourceUtilityLib;
 
@@ -29,8 +29,6 @@ namespace BrutGui
         public ListBox listBox = new();
         public Label fileInfo = new();
         public ImageView preview = new();
-        public LibVLC LibVLC;
-        public MediaPlayer player;
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
@@ -43,16 +41,7 @@ namespace BrutGui
         void InitializeComponent()
         {
             commands = new(this);
-            try
-            {
-                LibVLC = new();
-            }
-            catch (Exception) { }
 
-            if (LibVLC != null)
-            {
-                player = new(LibVLC);
-            }
             // sets the client (inner) size of the window for your content
             this.ClientSize = new Eto.Drawing.Size(200, 200);
             this.Size = new Eto.Drawing.Size(1000, 600);
@@ -185,10 +174,6 @@ namespace BrutGui
                     break;
 
                 case "WAV":
-                    if (LibVLC == null)
-                    {
-                        metadata += "\n\nWAV previews failed to load.";
-                    }
                     break;
                 default:
                     metadata += "\n\nThis format currently doesn't support previews.";
@@ -233,7 +218,10 @@ namespace BrutGui
                     break;
 
                 case "WAV":
-                    PreviewWAV();
+                    if(autoplay)
+                    {
+                        PreviewWAV();
+                    }
                     break;
                 default:
                     break;
@@ -289,19 +277,8 @@ namespace BrutGui
 
         private void PreviewWAV()
         {
-            if (LibVLC == null)
-            {
-                Log.Error("LibVLC did not load. If you are using Linux, please ensure libvlc-dev is installed.");
-                return;
-            }
-
-            MemoryStream sound = new(Globals.resource.GetResourceData(selected));
-            Media media = new Media(LibVLC, new StreamMediaInput(sound));
-            player = new(media);
-            if (autoplay)
-            {
-                player.Play();
-            }
+            MemoryStream soundStream = new(Globals.resource.GetResourceData(selected));
+            SoundEffect.FromStream(soundStream).Play();
         }
 
         public TableLayout BuildFileControlButtons()
