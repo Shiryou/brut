@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Reflection;
+
+using Microsoft.Extensions.Logging;
 
 using ResourceUtilityLib;
 using ResourceUtilityLib.Logging;
@@ -23,9 +25,12 @@ class ResourceUtilityCli
     static void Main(string[] args)
     {
         var logger = CheckLogging(ref args);
+        Log.Information("Starting BRUT-CLI {0}, BRUT-LIB {1}", GetApplicationVersion().ToString(), ResourceUtility.GetApplicationVersion());
 
         if (args.Length < 2)
         {
+            Console.WriteLine("BRUT-CLI {0}, BRUT-LIB {1}", GetApplicationVersion().ToString(), ResourceUtility.GetApplicationVersion());
+            Console.WriteLine("");
             Console.WriteLine("Usage: resutil resfile-name [[s nnnnn] [c] [n] [r] [u] [+|-|e sourcefile-name ]] [--log logfile] [--log-level level] |");
             Console.WriteLine(" [@ respfile-name] | [l] | [v]");
             Console.WriteLine("   +  add file");
@@ -44,8 +49,9 @@ class ResourceUtilityCli
             Console.WriteLine("   v  verify resource file");
             Console.WriteLine("   @  respfile run commands in respfile");
             Console.WriteLine("");
-            Console.WriteLine("   --log  create a log file at the given location.");
+            Console.WriteLine("   --log        create a log file at the given location.");
             Console.WriteLine("   --log-level  create a log file at the given location.");
+            Console.WriteLine("");
             Console.WriteLine("Note: Compression, respfiles, and derotating a PCX are not yet supported.");
             return;
         }
@@ -261,6 +267,12 @@ class ResourceUtilityCli
         }
         args = arglist.ToArray();
         return InitLogging(logFile, logLevel);
+    }
+
+    static public Version GetApplicationVersion()
+    {
+        Version? version = Assembly.GetExecutingAssembly().GetName().Version;
+        return (version != null) ? version : new Version(0, 0, 0, 0);
     }
 
     public static ILogger<ResourceUtility> InitLogging(string? file = null, LogEventLevel? level = null)

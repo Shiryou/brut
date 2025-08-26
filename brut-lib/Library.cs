@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 
 using Microsoft.Extensions.Logging;
 
@@ -899,10 +900,10 @@ namespace ResourceUtilityLib
             if (restore)
             {
                 bool uncompressed = ((header.flags & (byte)1) == (byte)1);
-                bool rotated = ((header.flags & (byte)2) == (byte)1);
+                bool rotated = ((header.flags & 2) == 2);
                 if (uncompressed)
                 {
-                    return ImageHandler.ConvertBitmapToPCX(uncompressed_data);
+                    return ImageHandler.ConvertBitmapToPCX(uncompressed_data, rotated);
                 }
             }
             return uncompressed_data;
@@ -1008,6 +1009,12 @@ namespace ResourceUtilityLib
         public void Dispose()
         {
             resource_file.Dispose();
+        }
+
+        static public Version GetApplicationVersion()
+        {
+            Version? version = Assembly.GetExecutingAssembly().GetName().Version;
+            return (version != null) ? version : new Version(0, 0, 0, 0);
         }
     }
 }

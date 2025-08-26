@@ -1,11 +1,14 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 using Eto.Forms;
+
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 using ResourceUtilityLib;
+
+using Serilog;
 
 namespace BrutGui
 {
@@ -24,6 +27,7 @@ namespace BrutGui
         public static void Main(string[] args)
         {
             InitLogging();
+            Log.Information("Starting BRUT-GUI {0}, BRUT-LIB {1}", Program.GetApplicationVersion().ToString(), ResourceUtility.GetApplicationVersion());
             if (args.Length > 0)
             {
                 Globals.resource = new ResourceUtility(args[0], Globals.logger);
@@ -52,6 +56,12 @@ namespace BrutGui
             // Create a logger instance for the library class
             var logger = loggerFactory.CreateLogger<ResourceUtility>();
             Globals.logger = logger;
+        }
+
+        static public Version GetApplicationVersion()
+        {
+            Version? version = Assembly.GetExecutingAssembly().GetName().Version;
+            return (version != null) ? version : new Version(0, 0, 0, 0);
         }
     }
 }
