@@ -18,6 +18,18 @@ namespace BrutGui
             form = mainForm;
         }
 
+        public void CreateFileCommand_Executed(object? sender, EventArgs e)
+        {
+            string filename = "";
+            SaveFileDialog newDialog = new() { };
+            newDialog.Filters.Add("Birthright Resource files|.RES");
+            if (newDialog.ShowDialog(form) == DialogResult.Ok)
+            {
+                filename = newDialog.FileName;
+            }
+            OpenFileFromFilename(filename);
+        }
+
         public void OpenFileCommand_Executed(object? sender, EventArgs e)
         {
             string filename = "";
@@ -34,7 +46,12 @@ namespace BrutGui
                     filename = openDialog.FileName;
                 }
             }
-            if (filename != "")
+            OpenFileFromFilename(filename);
+        }
+
+        public void OpenFileFromFilename(string filename)
+        {
+            if (!string.IsNullOrEmpty(filename))
             {
                 Log.Information("Loading RES file {filename}", filename);
                 if (Globals.resource != null)
@@ -54,9 +71,9 @@ namespace BrutGui
                     Globals.resource.RetainBitmap();
                 }
                 form.ManageFileDependentFields(true);
+                form.Menu = form.menuBar = (new Menu(form)).Initialize();
+                form.Content = form.InitializeLayout();
             }
-            form.Menu = form.menuBar = (new Menu(form)).Initialize();
-            form.Content = form.InitializeLayout();
         }
 
         public void CloseFileCommand_Executed(object? sender, EventArgs e)

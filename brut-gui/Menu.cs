@@ -17,6 +17,14 @@ namespace BrutGui
         public SubMenuItem BuildFileMenu()
         {
             // create menu
+            var createFileCommand = new Command
+            {
+                MenuText = "&New",
+                Shortcut = Application.Instance.CommonModifier | Keys.N,
+                ID = "CreateFileCommand"
+            };
+            createFileCommand.Executed += commands.CreateFileCommand_Executed;
+
             var openFileCommand = new Command
             {
                 MenuText = "&Open",
@@ -85,6 +93,7 @@ namespace BrutGui
             quitCommand.Executed += commands.QuitCommand_Executed;
 
             SubMenuItem fileMenu = new() { Text = "&File" }; //the & is used in Windows only, ignored in Mac, and stripped out in Linux
+            fileMenu.Items.Add(createFileCommand);
             fileMenu.Items.Add(openFileCommand);
             fileMenu.Items.Add(new SeparatorMenuItem());
             fileMenu.Items.Add(addFileCommand);
