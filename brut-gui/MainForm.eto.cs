@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -28,7 +28,8 @@ namespace BrutGui
         public List<object> selected_write_dependent = new();
         public ListBox listBox = new();
         public Label fileInfo = new();
-        public ImageView preview = new();
+        public ImageView previewPcx = new();
+        public Button previewWav = new();
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
@@ -110,11 +111,32 @@ namespace BrutGui
                 ScaleHeight = true
             });
 
-            preview.Image = null;
-            fileManager.Rows.Add(new TableRow(new TableCell(preview, true))
+            previewWav.Text = "Preview Audio";
+            Command previewWavCmd = new();
+            previewWavCmd.Executed += PreviewWAV;
+            previewWav.Command = previewWavCmd;
+            previewWav.Height = 50;
+            previewWav.Width = 50;
+            previewWav.Visible = false;
+
+            fileManager.Rows.Add(new TableRow(new TableCell(null, true))
             {
                 ScaleHeight = true
             });
+
+            previewPcx.Image = null;
+            fileManager.Rows.Add(new TableRow(new TableCell(previewPcx, true))
+            {
+                ScaleHeight = true
+            });
+
+            TableLayout audioControls = new()
+            {
+                Spacing = new Eto.Drawing.Size(5, 5),
+                Padding = new Eto.Drawing.Padding(5, 5)
+            };
+            audioControls.Rows.Add(new TableRow(new TableCell() { ScaleWidth = true }, new TableCell(previewWav, false), new TableCell() { ScaleWidth = true }));
+            fileManager.Rows.Add(new TableRow(new TableCell(audioControls, true)));
 
             fileManager.Rows.Add(new TableRow(new TableCell(BuildFileControlButtons(), true)));
             layout.Rows.Add(new TableRow(new TableCell(listBox, true), new TableCell(fileManager, true)));
@@ -184,11 +206,14 @@ namespace BrutGui
 
         public void ShowFileInfo(object? sender, EventArgs e)
         {
+            previewPcx.Image = null;
+            previewWav.Visible = false;
             if (listBox.SelectedValue == null)
             {
                 ManageSelectedDependentFields(false);
                 selected = new();
-                preview.Image = null;
+                previewPcx.Image = null;
+                previewWav.Visible = false;
                 return;
             }
 
@@ -218,7 +243,8 @@ namespace BrutGui
                     break;
 
                 case "WAV":
-                    if(autoplay)
+                    previewWav.Visible = true;
+                    if (autoplay)
                     {
                         PreviewWAV();
                     }
@@ -267,15 +293,15 @@ namespace BrutGui
                 }
                 MagickImage image = new(data, MagickFormat.Pcx);
                 image.Format = MagickFormat.Bmp;
-                preview.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
+                previewPcx.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
             }
             else
             {
-                preview.Image = null;
+                previewPcx.Image = null;
             }
         }
 
-        private void PreviewWAV()
+        private void PreviewWAV(object? sender = null, EventArgs? e = null)
         {
             MemoryStream soundStream = new(Globals.resource.GetResourceData(selected));
             SoundEffect.FromStream(soundStream).Play();
