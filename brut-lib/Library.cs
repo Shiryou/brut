@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 using Microsoft.Extensions.Logging;
 
@@ -116,6 +115,11 @@ namespace ResourceUtilityLib
                     }
                     throw new InvalidResourceException("A data read exception occured while loading the resource file.");
                 }
+            }
+            else
+            {
+                SaveFileHeader();
+                SaveDirectory();
             }
         }
 
@@ -601,6 +605,8 @@ namespace ResourceUtilityLib
                 resfile.Flush();
             }
             AddDirectoryEntry(header);
+            SaveFileHeader();
+            SaveDirectory();
         }
 
         /// <summary>
@@ -620,9 +626,6 @@ namespace ResourceUtilityLib
             {
                 AddFile(file);
             }
-
-            SaveFileHeader();
-            SaveDirectory();
         }
 
         /// <summary>
@@ -732,8 +735,8 @@ namespace ResourceUtilityLib
             resource_file.BaseStream.SetLength(resource_file.BaseStream.Length - length);
             dirEntries = newDir.ToArray();
             resources = (uint)newDir.Count;
-            SaveDirectory();
             SaveFileHeader();
+            SaveDirectory();
         }
 
         public bool IsReadOnly()
