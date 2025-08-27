@@ -48,6 +48,15 @@ namespace BrutGui
             }
             if (!found)
             {
+                if (_count+1 >= _size)
+                {
+                    // Shift elements to the left
+                    for (int i = 1; i < _mru.Length; i++)
+                    {
+                        _mru[i - 1] = _mru[i];
+                    }
+                    _count--;
+                }
                 _mru[_count++] = item;
             }
         }
