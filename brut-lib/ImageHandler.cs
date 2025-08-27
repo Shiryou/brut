@@ -1,5 +1,7 @@
 ﻿using System.Text;
 
+using ResourceUtilityLib.Logging;
+
 namespace ResourceUtilityLib
 {
     /// <summary>
@@ -317,10 +319,10 @@ namespace ResourceUtilityLib
             output.Write(pcx_header.YOrigin);
             output.Write((short)(pcx_header.Width - 1));
             output.Write((short)(pcx_header.Height - 1));
+            // Not recoverable. DPI appears to be set to 240x480 in most files, but not all. This is largely irrelevant as it's not really used by modern viewers.
             output.Write(0x01e00280);
-            output.Write(new byte[2]);
-            // write a common palette
-            output.Write(Convert.FromBase64String("/wsLCxMTExsbGyMjIysrKzc3Nz8/P0dHR09PT1dXV2NjY2tra3Nzc3t7e4ODgw=="));
+            // Not recoverable. All files use the 256 color palette, so we write the 16 color palette full of NULLs.
+            output.Write(new byte[48]);
             output.Write((byte)0);
             output.Write((byte)1);
             output.Write(pcx_header.LineLength);
@@ -350,6 +352,8 @@ namespace ResourceUtilityLib
         /// </summary>
         private void Derotate()
         {
+            LogHelper.Info("De-rotating and recompressing to PCX is not implemented. Falling back to non-rotating decompress.");
+            Recompress();
         }
 
         /// <summary>
@@ -357,6 +361,7 @@ namespace ResourceUtilityLib
         /// </summary>
         private void Recompress()
         {
+            LogHelper.Info("Recompressing to PCX without rotating.");
             pcx_header = new()
             {
                 Code = 10,
@@ -370,7 +375,7 @@ namespace ResourceUtilityLib
             // Check if the last byte of each line is 0 to adjust the width.
             for (int i = 0; i < pcx_header.Height; i++)
             {
-                data.BaseStream.Position = (i * pcx_header.Width) + (pcx_header.Width - 1);
+                data.BaseStream.Position = (i * pcx_header.Width) + (pcx_header.Width - 1) + bitmap_header_length;
                 if (data.ReadByte() != 0)
                 {
                     short_width = false;
@@ -387,10 +392,6 @@ namespace ResourceUtilityLib
             output.BaseStream.Position = pcx_reserved;
             while (data.BaseStream.Position < data.BaseStream.Length)
             {
-                //if (data.BaseStream.Position % pcx_header.LineLength == 0)
-                //{
-                //    data.ReadByte();
-                //}
                 output.Write(EvaluateRun());
             }
         }
