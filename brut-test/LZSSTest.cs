@@ -11,8 +11,8 @@ namespace BrutTest
         [Ignore("Not implemented")]
         public void LZSSEncode()
         {
-            byte[] uncompressed = File.ReadAllBytes(@"TestData\test_uncomp.bin");
-            byte[] expected = File.ReadAllBytes(@"TestData\test_comp.bin");
+            byte[] uncompressed = File.ReadAllBytes(Path.Combine("TestData","test_uncomp.bin"));
+            byte[] expected = File.ReadAllBytes(Path.Combine("TestData", "test_comp.bin"));
             byte[] actual = LZSS.Encode(uncompressed);
 
             CollectionAssert.AreEqual(expected, actual);
@@ -21,8 +21,8 @@ namespace BrutTest
         [TestMethod]
         public void LZSSDecode()
         {
-            byte[] compressed = File.ReadAllBytes(@"TestData\test_comp.bin");
-            byte[] expected = File.ReadAllBytes(@"TestData\test_uncomp.bin");
+            byte[] compressed = File.ReadAllBytes(Path.Combine("TestData", "test_comp.bin"));
+            byte[] expected = File.ReadAllBytes(Path.Combine("TestData", "test_uncomp.bin"));
             byte[] actual = LZSS.Decode(compressed, (uint)expected.Length);
 
             CollectionAssert.AreEqual(expected, actual);

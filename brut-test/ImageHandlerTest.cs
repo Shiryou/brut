@@ -10,8 +10,8 @@ namespace BrutTest
         [TestMethod]
         public void ConvertPCXtoBitmapWithoutRotation()
         {
-            byte[] pcx = File.ReadAllBytes(@"TestData\test.pcx");
-            byte[] expected = File.ReadAllBytes(@"TestData\test_uncomp.bin");
+            byte[] pcx = File.ReadAllBytes(Path.Combine("TestData", "test.pcx"));
+            byte[] expected = File.ReadAllBytes(Path.Combine("TestData", "test_uncomp.bin"));
             byte[] actual = ImageHandler.ConvertPCXToBitmap(pcx, false);
             
             CollectionAssert.AreEqual(expected, actual);
