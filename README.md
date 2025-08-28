@@ -24,10 +24,10 @@ Some high priority features that are needed to get to 1.0.
 
 * **Real-world use testing!**
 
-* LZSS compression to match `RESUTIL.EXE`
-* Reversal of PCX rotation
+* [LZSS compression][issue1] to match `RESUTIL.EXE`
+* [Reversal of PCX rotation][issue2]
 * Unit tests
-* Media previews (partly working for WAV and PCX)
+* Media previews for PCX
 
 ## Changelog
 
@@ -38,3 +38,6 @@ Some high priority features that are needed to get to 1.0.
 [MIT](LICENSE)
 
 If you decide to fork, extend, or integrate BRUT into your own project, please drop me a line. Knowing the project is useful helps keep the motivation going.
+
+[issue1]: https://github.com/Shiryou/brut/issues/1
+[issue2]: https://github.com/Shiryou/brut/issues/2
