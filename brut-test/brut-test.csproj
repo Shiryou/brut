@@ -23,4 +23,15 @@
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Include the files you want to copy -->
+    <None Update="TestData\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CopyFilesToOutput" AfterTargets="Build">
+    <Copy SourceFiles="@(None)" DestinationFolder="$(OutputPath)TestData\" />
+  </Target>
+
 </Project>
