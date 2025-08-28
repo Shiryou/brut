@@ -204,10 +204,12 @@ namespace BrutGui
             return metadata;
         }
 
+        #nullable enable
         public void ShowFileInfo(object? sender, EventArgs e)
         {
             previewPcx.Image = null;
             previewWav.Visible = false;
+            string selectedValue = listBox.SelectedValue.ToString() ?? string.Empty;
             if (listBox.SelectedValue == null)
             {
                 ManageSelectedDependentFields(false);
@@ -220,7 +222,7 @@ namespace BrutGui
             ManageSelectedDependentFields(true);
             try
             {
-                selected = Globals.resource.GetFileInformation(listBox.SelectedValue.ToString());
+                selected = Globals.resource.GetFileInformation(selectedValue);
             }
             catch (FileNotFoundException)
             {
@@ -233,7 +235,7 @@ namespace BrutGui
                 {
                     Globals.resource.UseCRCHash();
                 }
-                selected = Globals.resource.GetFileInformation(listBox.SelectedValue.ToString());
+                selected = Globals.resource.GetFileInformation(selectedValue);
             }
 
             switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
@@ -259,6 +261,7 @@ namespace BrutGui
             fileInfo.Text = archive_metadata + "\n\n" + file_metadata;
             Log.Information(file_metadata);
         }
+        #nullable restore
 
         private string FormatFileSize(uint len)
         {
@@ -301,11 +304,13 @@ namespace BrutGui
             }
         }
 
+        #nullable enable
         private void PreviewWAV(object? sender = null, EventArgs? e = null)
         {
             MemoryStream soundStream = new(Globals.resource.GetResourceData(selected));
             SoundEffect.FromStream(soundStream).Play();
         }
+        #nullable restore
 
         public TableLayout BuildFileControlButtons()
         {

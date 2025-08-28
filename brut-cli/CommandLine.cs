@@ -25,7 +25,7 @@ class ResourceUtilityCli
     static void Main(string[] args)
     {
         var logger = CheckLogging(ref args);
-        Log.Information("Starting BRUT-CLI {0}, BRUT-LIB {1}", GetApplicationVersion().ToString(), ResourceUtility.GetApplicationVersion());
+        Log.Debug("Starting BRUT-CLI {0}, BRUT-LIB {1}", GetApplicationVersion().ToString(), ResourceUtility.GetApplicationVersion());
 
         if (args.Length < 2)
         {
@@ -58,7 +58,7 @@ class ResourceUtilityCli
 
         string resfile = args[0];
 
-        Console.WriteLine("Processing " + resfile);
+        Log.Information("Processing " + resfile);
         ResourceUtility ru;
         try
         {
@@ -66,12 +66,12 @@ class ResourceUtilityCli
         }
         catch (FileNotFoundException)
         {
-            Console.WriteLine("Unable to find " + resfile);
+            Log.Information("Unable to find " + resfile);
             return;
         }
 
-        Console.WriteLine("Version: " + ru.FileVersion());
-        Console.WriteLine("Resources: " + ru.Count());
+        Log.Information("Version: " + ru.FileVersion());
+        Log.Information("Resources: " + ru.Count());
 
         Operations operation = Operations.NoOp;
         string filename = "";
@@ -106,7 +106,7 @@ class ResourceUtilityCli
                             ru.UseIDHash();
                             break;
                         default:
-                            Console.WriteLine("Invalid hashing algorithm. Using default.");
+                            Log.Warning("Invalid hashing algorithm. Using default.");
                             break;
                     }
                     break;
@@ -118,7 +118,7 @@ class ResourceUtilityCli
                     break;
 
                 case 'C':
-                    Console.WriteLine("Compression is not yet supported when adding a file.");
+                    Log.Information("Compression is not yet supported when adding a file.");
                     ru.EnableCompression();
                     break;
                 case 'U':
@@ -145,26 +145,26 @@ class ResourceUtilityCli
         {
             case Operations.OpAdd:
                 Add(ru, filename);
-                LogHelper.Info("Adding {0} to {0}", filename, resfile);
+                Log.Debug("Adding {0} to {1}", filename, resfile);
                 break;
             case Operations.OpRemove:
-                LogHelper.Info("Removing {0} from {0}", filename, resfile);
+                Log.Debug("Removing {0} from {1}", filename, resfile);
                 Remove(ru, filename);
                 break;
             case Operations.OpExtract:
-                LogHelper.Info("Extracting {0} from {0}", filename, resfile);
+                Log.Debug("Extracting {0} from {1}", filename, resfile);
                 Extract(ru, filename);
                 break;
             case Operations.OpExtractAll:
-                LogHelper.Info("Extracting all files in {0}", resfile);
+                Log.Debug("Extracting all files in {0}", resfile);
                 ExtractAll(ru);
                 break;
             case Operations.OpList:
-                LogHelper.Info("Listing files in {0}", resfile);
+                Log.Debug("Listing files in {0}", resfile);
                 List(ru);
                 break;
             case Operations.OpVerify:
-                LogHelper.Info("Verifying files in {0}", resfile);
+                Log.Debug("Verifying files in {0}", resfile);
                 List(ru, true);
                 break;
         }
@@ -179,11 +179,11 @@ class ResourceUtilityCli
         {
             if (verify)
             {
-                Console.WriteLine(String.Format("{0,4} {1,12} {2,6} {3} {4} {5,6}", i, ResourceUtility.CharArrayToString(headers[i].filename).PadRight(12), headers[i].cbUncompressedData, headers[i].flags, ResourceUtility.GetCompressionTypes()[headers[i].compressionCode], headers[i].cbCompressedData));
+                Log.Information("{0,4} {1,12} {2,6} {3} {4} {5,6}", i, ResourceUtility.CharArrayToString(headers[i].filename).PadRight(12), headers[i].cbUncompressedData, headers[i].flags, ResourceUtility.GetCompressionTypes()[headers[i].compressionCode], headers[i].cbCompressedData);
             }
             else
             {
-                Console.WriteLine(String.Format("{0,4} {1,12} {2,6}", i, ResourceUtility.CharArrayToString(headers[i].filename).PadRight(12), headers[i].cbChunk));
+                Log.Information("{0,4} {1,12} {2,6}", i, ResourceUtility.CharArrayToString(headers[i].filename).PadRight(12), headers[i].cbChunk);
             }
         }
     }
@@ -203,10 +203,9 @@ class ResourceUtilityCli
         try
         {
             ResourceHeader resource = ru.GetFileInformation(filename);
-            Log.Error("\nFile {0} was not found in the resource file.", filename);
-            Console.Write(String.Format("Extracting {0} containing {1} bytes... ", filename, resource.cbUncompressedData));
+            Log.Information("Extracting {0} containing {1} bytes... ", filename, resource.cbUncompressedData);
             ru.ExtractFile(filename);
-            Console.WriteLine("Succeeded!");
+            Log.Information("Succeeded!");
         }
         catch (FileNotFoundException)
         {
@@ -231,12 +230,10 @@ class ResourceUtilityCli
             switch (args[index])
             {
                 case "--log":
-                    LogHelper.Info("Enabling log file {0}", args[index + 1]);
                     logFile = args[index + 1];
                     index++;
                     break;
                 case "--log-level":
-                    LogHelper.Info("Enabling log level {0}", args[index + 1]);
                     switch (args[index + 1].ToUpper())
                     {
                         case "VERBOSE":
@@ -278,7 +275,7 @@ class ResourceUtilityCli
     public static ILogger<ResourceUtility> InitLogging(string? file = null, LogEventLevel? level = null)
     {
         LogEventLevel fileLevel = LogEventLevel.Debug;
-        LogEventLevel consoleLevel = LogEventLevel.Warning;
+        LogEventLevel consoleLevel = LogEventLevel.Information;
         string logFile = "logs/brut-.log";
         if (level != null)
         {
@@ -290,12 +287,13 @@ class ResourceUtilityCli
         }
 
         Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Verbose()
             .Enrich.WithProperty("SourceContext", "ResourceUtilityCli")
             .WriteTo.Console(outputTemplate: "{Message:lj}{NewLine}{Exception}", restrictedToMinimumLevel: consoleLevel)
             .WriteTo.File(logFile, rollingInterval: RollingInterval.Day, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}", restrictedToMinimumLevel: fileLevel, shared: true)
             .CreateLogger();
 
-        LogHelper.Info("Logging level {0} to {1}, and {2} to console", fileLevel, logFile, consoleLevel);
+        Log.Verbose("Logging level {0} to {1}, and {2} to console", fileLevel, logFile, consoleLevel);
 
         // Wrap Serilog in Microsoft's logging abstraction
         using var loggerFactory = LoggerFactory.Create(builder =>

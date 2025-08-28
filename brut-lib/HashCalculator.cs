@@ -1,6 +1,4 @@
-﻿using System;
-
-using ResourceUtilityLib.Logging;
+﻿using ResourceUtilityLib.Logging;
 namespace ResourceUtilityLib
 {
     /// <summary>
@@ -85,4 +83,3 @@ namespace ResourceUtilityLib
         }
     }
 }
-

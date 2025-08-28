@@ -28,7 +28,6 @@ namespace BrutTest
         }
 
         [TestMethod]
-        [ExpectedException(typeof(UnsupportedVersionException), "An invalid file version was accepted.")]
         public void CannotOpenInvalidFileVersion()
         {
             MemoryStream resfile = new MemoryStream();
@@ -38,11 +37,10 @@ namespace BrutTest
             BinaryWriter writer = new BinaryWriter(resfile);
             writer.Write((uint)3);
 
-            ResourceUtility brut2 = new(resfile);
+            Assert.ThrowsExactly<UnsupportedVersionException>(() => new ResourceUtility(resfile));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(IndexOutOfRangeException), "An invalid resource file was accepted.")]
         public void CannotOpenInvalidDIrectory()
         {
             MemoryStream resfile = new MemoryStream();
@@ -52,7 +50,7 @@ namespace BrutTest
             resfile.Position = 4;
             writer.Write((uint)resfile.Length + 1);
 
-            ResourceUtility brut2 = new(resfile);
+            Assert.ThrowsExactly<IndexOutOfRangeException>(() => new ResourceUtility(resfile));
         }
 
         [TestMethod]
@@ -69,7 +67,6 @@ namespace BrutTest
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidResourceException), "An invalid resource version was accepted.")]
         public void CannotLoadResourceWithInvalidStarCode()
         {
             MemoryStream resfile = new MemoryStream();
@@ -83,11 +80,10 @@ namespace BrutTest
             resfile.Position = brut.GetFileOffset("FILENAME.FLC");
             writer.Write((uint)1129878754);
 
-            brut.GetFileInformation("FILENAME.FLC");
+            Assert.ThrowsExactly<InvalidResourceException>(() => brut.GetFileInformation("FILENAME.FLC"));
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidResourceException), "An invalid resource version was accepted.")]
         public void CannotLoadResourceWithInvalidSize()
         {
             MemoryStream resfile = new MemoryStream();
@@ -101,7 +97,7 @@ namespace BrutTest
             resfile.Position = brut.GetFileOffset("FILENAME.FLC") + 8;
             writer.Write((uint)100);
 
-            brut.GetFileInformation("FILENAME.FLC");
+            Assert.ThrowsExactly<InvalidResourceException>(() => brut.GetFileInformation("FILENAME.FLC"));
         }
 
         [TestMethod]

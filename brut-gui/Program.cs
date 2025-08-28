@@ -58,10 +58,12 @@ namespace BrutGui
             Globals.logger = logger;
         }
 
+        #nullable enable
         static public Version GetApplicationVersion()
         {
             Version? version = Assembly.GetExecutingAssembly().GetName().Version;
             return (version != null) ? version : new Version(0, 0, 0, 0);
         }
+        #nullable restore
     }
 }

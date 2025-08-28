@@ -126,7 +126,7 @@ namespace ResourceUtilityLib
 
         private static FileStream OpenStream(string filePath)
         {
-            LogHelper.Info("Opening {filePath}", filePath);
+            LogHelper.Verbose("Opening {filePath}", filePath);
             try
             {
                 // Try to open with ReadWrite access
@@ -171,7 +171,7 @@ namespace ResourceUtilityLib
             }
 
             resources = resource_file.ReadUInt32();
-            LogHelper.Info("File version: {file_version}; directory location: {directory}; number of resources: {resources}", file_version, directory, resources);
+            LogHelper.Debug("File version: {file_version}; directory location: {directory}; number of resources: {resources}", file_version, directory, resources);
         }
 
         /// <summary>
