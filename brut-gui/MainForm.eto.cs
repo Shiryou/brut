@@ -209,7 +209,7 @@ namespace BrutGui
         {
             previewPcx.Image = null;
             previewWav.Visible = false;
-            string selectedValue = listBox.SelectedValue.ToString() ?? string.Empty;
+            string selectedValue = listBox.SelectedValue?.ToString() ?? string.Empty;
             if (listBox.SelectedValue == null)
             {
                 ManageSelectedDependentFields(false);
