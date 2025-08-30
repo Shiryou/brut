@@ -46,6 +46,13 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ env.TAG }}
+    - name: Get commit hash from tag
+      id: get_commit
+      shell: bash
+      run: |
+        COMMIT_HASH=$(git rev-list -n 1 v0.1.1)
+        echo "Commit hash: $COMMIT_HASH"
+        echo "commit_hash=$COMMIT_HASH" >> $GITHUB_OUTPUT
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -82,10 +89,10 @@ jobs:
     - name: Update nightly release
       uses: ncipollo/release-action@main
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GH_PAT }}
         artifacts: "${{ matrix.cli_dst }},${{ matrix.gui_dst }}"
         tag: ${{ env.TAG }}
-        commit: ${{ env.TAG }}
+        commit: ${{ steps.get_commit.outputs.commit_hash }}
         name: "📦 Release ${{ env.TAG }}"
         draft: true
         allowUpdates: true
