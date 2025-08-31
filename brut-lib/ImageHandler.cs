@@ -276,6 +276,7 @@ namespace ResourceUtilityLib
         private readonly uint min_run = 2;
         private readonly uint max_run = 63;
         private bool short_width = true;
+        private long counter = 0;
 
         /// <summary>
         /// Inititalizes the image and buffer dimensions.
@@ -352,8 +353,92 @@ namespace ResourceUtilityLib
         /// </summary>
         private void Derotate()
         {
-            LogHelper.Info("De-rotating and recompressing to PCX is not implemented. Falling back to non-rotating decompress.");
-            Recompress();
+            LogHelper.Info("De-rotating and recompressing to PCX.");
+            pcx_header = new()
+            {
+                Code = 10, // This is always the case oer spec
+                XOrigin = 0, // This can't be restored, but should normally be 0
+                YOrigin = 0, // This can't be restored, but should normally be 0
+                Width = (short)header.Height, // This should normally be the width (which may need to be reduced by 1 if each row ends in a null byte)
+                Height = header.Width,
+                LineLength = (ushort)header.Height // When the file is stored, we set the Width of the bitmap to the LineLength of the PCX, so we reverse this
+            };
+
+            // Check if the last byte of each line is 0 to adjust the width.
+            for (int i = 0; i < pcx_header.Width; i++)
+            {
+                data.BaseStream.Position = i + bitmap_header_length + 1;
+                if (data.ReadByte() != 0)
+                {
+                    short_width = false;
+                    break;
+                }
+            }
+            if (short_width)
+            {
+                pcx_header.Width = (short)(pcx_header.Width - 1);
+            }
+
+            // decompress
+            data.BaseStream.Position = bitmap_header_length;
+            output.BaseStream.Position = pcx_reserved;
+            counter = 0;
+            while (data.BaseStream.Position < data.BaseStream.Length)
+            {
+                output.Write(EvaluateRotationRun());
+            }
+
+        }
+
+        /// <summary>
+        /// Check whether a single byte or a run length/byte pair should be written
+        /// </summary>
+        private byte[] EvaluateRotationRun()
+        {
+            long start_pos = counter; //// Is this the right way to do this?
+            byte start = ReadByte();
+            counter++;
+            int count = 1;
+            while (
+                counter + bitmap_header_length < data.BaseStream.Length &&
+                counter % pcx_header.Width != 0 &&
+                ReadByte() == start &&
+                count < max_run)
+            {
+                count++;
+            }
+
+            if (count < min_run)
+            {
+                count = 1;
+            }
+            counter = start_pos + count;
+            data.BaseStream.Position = bitmap_header_length + counter;
+            // 1 in two most significant bits indicates a run, so any single value greater
+            // than 191 must be stored in a byte pair
+            if (count == 1 && start < 192)
+            {
+                return [start];
+            }
+            return [(byte)(192 + count), start];
+        }
+
+        // output position W*(H-i-1)+((W*H+1)*INT(i/H)) + pcx_reserved
+        // output position W*(H-i-1)+((W*H+1)*INT(i/H)) + pcx_reserved
+        // input  position i
+        // input  row      INT(i/H)
+        private long CalculateSourcePixel(long input)
+        {
+            short width = pcx_header.Width;
+            short height = pcx_header.Height;
+            return width * (height - input - 1) + ((width * height + 1) * (long)Math.Floor((double)(input / height)));
+        }
+
+        private byte ReadByte()
+        {
+            long pos = CalculateSourcePixel(counter++) + bitmap_header_length;
+            data.BaseStream.Position = pos;
+            return data.ReadByte();
         }
 
         /// <summary>
