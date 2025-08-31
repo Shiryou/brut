@@ -156,7 +156,21 @@ namespace BrutGui
                     Globals.resource.RestorePCX();
                 }
             }
+        }
 
+        public void TogglePCXRotation_Executed(object? sender, EventArgs e)
+        {
+            if (Globals.resource != null)
+            {
+                if (form.restorePCX.Checked)
+                {
+                    Globals.resource.EnablePCXRotation();
+                }
+                else
+                {
+                    Globals.resource.DisablePCXRotation();
+                }
+            }
         }
 
         public void ToggleWAVAutoplay_Executed(object? sender, EventArgs e)

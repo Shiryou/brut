@@ -137,6 +137,14 @@ namespace BrutGui
                 Checked = form.restorePCX.Checked
             };
             form.restorePCX.CheckedChanged += commands.TogglePCXRestore_Executed;
+            form.rotatePCX = new()
+            {
+                Text = "&Rotate PCX files",
+                Shortcut = Application.Instance.CommonModifier | Keys.R,
+                ID = "RotatePCX",
+                Checked = form.rotatePCX.Checked
+            };
+            form.rotatePCX.CheckedChanged += commands.TogglePCXRotation_Executed;
             CheckMenuItem autoplay = new()
             {
                 Text = "Autoplay &WAV files",
@@ -148,6 +156,7 @@ namespace BrutGui
 
             SubMenuItem settingsMenu = new() { Text = "&Options" };
             settingsMenu.Items.Add(form.restorePCX);
+            settingsMenu.Items.Add(form.rotatePCX);
             settingsMenu.Items.Add(autoplay);
 
             return settingsMenu;

@@ -33,6 +33,10 @@ namespace BrutGui
         public ResourceHeader selected;
         public Commands commands;
         public MenuBar menuBar;
+        public CheckMenuItem rotatePCX = new()
+        {
+            Checked = false
+        };
         public CheckMenuItem restorePCX = new()
         {
             Checked = true
