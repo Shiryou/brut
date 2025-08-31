@@ -429,8 +429,8 @@ namespace ResourceUtilityLib
         // input  row      INT(i/H)
         private long CalculateSourcePixel(long input)
         {
-            short width = pcx_header.Width;
-            short height = pcx_header.Height;
+            short width = pcx_header.Height;
+            short height = pcx_header.Width;
             return width * (height - input - 1) + ((width * height + 1) * (long)Math.Floor((double)(input / height)));
         }
 

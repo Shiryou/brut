@@ -182,19 +182,11 @@ namespace BrutGui
             switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
             {
                 case "PCX":
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        if ((selected.flags & 2) == 2)
-                        {
-                            metadata += "\n\nNote: Image previews and extraction currently do not support un-rotating. This will be added in a future update.";
-                        }
-                    }
-                    else
-                    {
-                        metadata += "\n\nPCX previews are currently unavailable on Linux builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
+                        metadata += "\n\nPCX previews are currently only available on Windows builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
                     }
                     break;
-
                 case "WAV":
                     break;
                 default:

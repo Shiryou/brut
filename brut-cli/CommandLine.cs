@@ -52,7 +52,7 @@ class ResourceUtilityCli
             Console.WriteLine("   --log        create a log file at the given location.");
             Console.WriteLine("   --log-level  create a log file at the given location.");
             Console.WriteLine("");
-            Console.WriteLine("Note: Compression, respfiles, and derotating a PCX are not yet supported.");
+            Console.WriteLine("Note: Compression and respfiles are not yet supported.");
             return;
         }
 
