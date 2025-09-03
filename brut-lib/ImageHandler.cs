@@ -423,15 +423,11 @@ namespace ResourceUtilityLib
             return [(byte)(192 + count), start];
         }
 
-        // output position W*(H-i-1)+((W*H+1)*INT(i/H)) + pcx_reserved
-        // output position W*(H-i-1)+((W*H+1)*INT(i/H)) + pcx_reserved
-        // input  position i
-        // input  row      INT(i/H)
         private long CalculateSourcePixel(long input)
         {
-            short width = pcx_header.Height;
-            short height = pcx_header.Width;
-            return width * (height - input - 1) + ((width * height + 1) * (long)Math.Floor((double)(input / height)));
+            short width = pcx_header.Width;
+            short height = pcx_header.Height;
+            return input * height - ((height * width - 1) * (long)Math.Floor((double)(input / width)));
         }
 
         private byte ReadByte()
