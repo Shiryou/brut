@@ -28,12 +28,13 @@ namespace BrutGui
         {
             InitLogging();
             Log.Information("Starting BRUT-GUI {0}, BRUT-LIB {1}", Program.GetApplicationVersion().ToString(), ResourceUtility.GetApplicationVersion());
+            Globals.mru.Load(Path.Combine(Globals.appData, "mru.json"));
             if (args.Length > 0)
             {
                 Globals.resource = new ResourceUtility(args[0], Globals.logger);
                 Globals.resourceName = Path.GetFileName(args[0]).ToUpper();
+                Globals.mru.Add(args[0]);
             }
-            Globals.mru.Load(Path.Combine(Globals.appData, "mru.json"));
             new Application(Eto.Platform.Detect).Run(new MainForm());
             Globals.mru.Save(Path.Combine(Globals.appData, "mru.json"));
         }
