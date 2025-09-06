@@ -383,11 +383,10 @@ namespace ResourceUtilityLib
             data.BaseStream.Position = bitmap_header_length;
             output.BaseStream.Position = pcx_reserved;
             counter = 0;
-            while (data.BaseStream.Position < data.BaseStream.Length)
+            while (counter + bitmap_header_length < data.BaseStream.Length)
             {
                 output.Write(EvaluateRotationRun());
             }
-
         }
 
         /// <summary>
@@ -397,7 +396,6 @@ namespace ResourceUtilityLib
         {
             long start_pos = counter; //// Is this the right way to do this?
             byte start = ReadByte();
-            counter++;
             int count = 1;
             while (
                 counter + bitmap_header_length < data.BaseStream.Length &&
@@ -432,8 +430,7 @@ namespace ResourceUtilityLib
 
         private byte ReadByte()
         {
-            long pos = CalculateSourcePixel(counter++) + bitmap_header_length;
-            data.BaseStream.Position = pos;
+            data.BaseStream.Position = CalculateSourcePixel(counter++) + bitmap_header_length;
             return data.ReadByte();
         }
 
