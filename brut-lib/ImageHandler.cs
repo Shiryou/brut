@@ -2,6 +2,9 @@
 
 using ResourceUtilityLib.Logging;
 
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+
 namespace ResourceUtilityLib
 {
     /// <summary>
@@ -40,6 +43,7 @@ namespace ResourceUtilityLib
         protected readonly BinaryWriter output;
         protected readonly uint pcx_reserved = 128;
         protected readonly uint bitmap_header_length = 10;
+        protected readonly byte[] pcx_palette = Convert.FromBase64String("AAD/CwsLExMTGxsbIyMjKysrNzc3Pz8/R0dHT09PV1dXY2Nja2trc3Nze3t7g4ODj4+Pk5OTm5ubo6Ojq6urs7Ozu7u7w8PDy8vLz8/P19fX39/f5+fn7+/v9/f3////IxsvJx83Lyc/NytHPzNTRzdbTz9jV0drX0t3Z1N/b1uHd2OTf2ubh3Ojk3urm4O3o4u/r5PHt5vPw6Pbz6vj17Pr47vz78f/Fxc7GxtHHx9XIyNnKyd3LyuDMy+TNzOjOzezPzu3R0O7T0u/V1PHX1vLZ2PPb2vTd3fbf3/fi4vjk5Prn5/vp6fzs7P3v7//Lws7NwtHQw9TSxNfVxNvYxd7axeHdxuTgx+jix+vlyO7nyPLqyfXtyvjvyvvyy//yzf/z0P/00v/11f/21//32v/33P/43//OwsLRwsLUwsLXw8Paw8Pdw8Pgw8Pjw8Plw8PoxMTrxcXtxsbwyMjyycn1y8v2zMz3zc34zs750ND60dH809P91NT+1dX/19fLxcAOxsARyMAUysAYy8AbzcAezsAh0MAl0sAo1MAr1cAu18Hy2cH12sH43MH73sH/4ML/48L/5sP/6cT/7MT/78X/8sb/9cfLyMLNysLQzMPTz8TW0sXZ1MXc18bf2sfi3Mjl38jo4snr5Mru58vx6sz07c338M748s/69NH899P8+Nj9+d79+uT+++v//fHACMLACsLADMPADsPAEMTAEsTAFMXAFsXAGMbAGsbAHMfAHsfAH8fAIcfAI8jAJcjB58nC6svE7c7G8NDJ8tLM9dXP+NjS+9vLyMXNycbPy8fRzcjUz8nW0crY08va1c3d187f2M/g2tDi3NHk3tPm39To4dXq49bs5dju59nw6dvy7N317t/38eH58+P89uXLx8bNyMfQysjSy8nVzcrXz8va0Mzd0s3f087h1M/j1tDm19Ho2NLq2tPs29Tu3NXx3tfz4dn149v45t366N/86+H/7uT/8OX64cA76MA98MA/+MA//8A+/9////T////");
 
         /// <summary>
         /// Initializes the data streams.
@@ -119,7 +123,58 @@ namespace ResourceUtilityLib
                 Decompress();
             }
             SaveBitmapHeader();
+
             return ((MemoryStream)output.BaseStream).ToArray();
+        }
+
+        public byte[] ConvertToBMP(bool rotate)
+        {
+            int width = header.Width;
+            int height = header.Height;
+            int padding = (4 - (width * 3) % 4) % 4; // Row padding
+
+            Image<Rgb24> img = new Image<Rgb24>(width, height);
+
+            // Read the color palette (256 colors)
+            Rgb24[] palette = new Rgb24[256];
+            data.BaseStream.Position = data.BaseStream.Length - 768;
+            for (int i = 0; i < 256; i++)
+            {
+                palette[i] = new Rgb24(data.ReadByte(), data.ReadByte(), data.ReadByte());
+            }
+
+            // Decode PCX data
+            data.BaseStream.Position = (long)pcx_reserved; // Start after the header
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width;)
+                {
+                    byte byteValue = data.ReadByte();
+                    if ((byteValue & 0xC0) == 0xC0) // RLE byte
+                    {
+                        int count = byteValue & 0x3F; // Get the count
+                        byte pixelValue = data.ReadByte(); // Get the pixel value
+                        for (int i = 0; i < count; i++)
+                        {
+                            if (x < width) // Ensure we don't go out of bounds
+                            {
+                                img[x++, y] = palette[pixelValue]; // Set the pixel color from the palette
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // If it's a regular byte, just set the pixel
+                        if (x < width) // Ensure we don't go out of bounds
+                        {
+                            img[x++, y] = palette[byteValue];
+                        }
+                    }
+                }
+            }
+            MemoryStream memoryStream = new();
+            img.SaveAsBmp(memoryStream); // Save as BMP to MemoryStream
+            return memoryStream.ToArray(); // Get the byte array
         }
 
         /// <summary>
@@ -304,7 +359,7 @@ namespace ResourceUtilityLib
                 Recompress();
             }
             output.Write((byte)0x0C); // palette separator
-            output.Write(Convert.FromBase64String("AAD/CwsLExMTGxsbIyMjKysrNzc3Pz8/R0dHT09PV1dXY2Nja2trc3Nze3t7g4ODj4+Pk5OTm5ubo6Ojq6urs7Ozu7u7w8PDy8vLz8/P19fX39/f5+fn7+/v9/f3////IxsvJx83Lyc/NytHPzNTRzdbTz9jV0drX0t3Z1N/b1uHd2OTf2ubh3Ojk3urm4O3o4u/r5PHt5vPw6Pbz6vj17Pr47vz78f/Fxc7GxtHHx9XIyNnKyd3LyuDMy+TNzOjOzezPzu3R0O7T0u/V1PHX1vLZ2PPb2vTd3fbf3/fi4vjk5Prn5/vp6fzs7P3v7//Lws7NwtHQw9TSxNfVxNvYxd7axeHdxuTgx+jix+vlyO7nyPLqyfXtyvjvyvvyy//yzf/z0P/00v/11f/21//32v/33P/43//OwsLRwsLUwsLXw8Paw8Pdw8Pgw8Pjw8Plw8PoxMTrxcXtxsbwyMjyycn1y8v2zMz3zc34zs750ND60dH809P91NT+1dX/19fLxcAOxsARyMAUysAYy8AbzcAezsAh0MAl0sAo1MAr1cAu18Hy2cH12sH43MH73sH/4ML/48L/5sP/6cT/7MT/78X/8sb/9cfLyMLNysLQzMPTz8TW0sXZ1MXc18bf2sfi3Mjl38jo4snr5Mru58vx6sz07c338M748s/69NH899P8+Nj9+d79+uT+++v//fHACMLACsLADMPADsPAEMTAEsTAFMXAFsXAGMbAGsbAHMfAHsfAH8fAIcfAI8jAJcjB58nC6svE7c7G8NDJ8tLM9dXP+NjS+9vLyMXNycbPy8fRzcjUz8nW0crY08va1c3d187f2M/g2tDi3NHk3tPm39To4dXq49bs5dju59nw6dvy7N317t/38eH58+P89uXLx8bNyMfQysjSy8nVzcrXz8va0Mzd0s3f087h1M/j1tDm19Ho2NLq2tPs29Tu3NXx3tfz4dn149v45t366N/86+H/7uT/8OX64cA76MA98MA/+MA//8A+/9////T////"));
+            output.Write(pcx_palette);
             SavePCXHeader();
             return ((MemoryStream)output.BaseStream).ToArray();
         }

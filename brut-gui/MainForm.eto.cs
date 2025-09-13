@@ -182,7 +182,6 @@ namespace BrutGui
                 metadata += String.Format("File size: {0}", FormatFileSize(selected.cbUncompressedData));
             }
 
-            Log.Information("{0} {1}", selected.extension, ResourceUtility.GetSupportedExtensions()[selected.extension]);
             switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
             {
                 case "PCX":
@@ -290,9 +289,9 @@ namespace BrutGui
                 {
                     data = Globals.resource.GetResourceData(selected);
                 }
-                MagickImage image = new(data, MagickFormat.Pcx);
-                image.Format = MagickFormat.Bmp;
-                previewPcx.Image = new Eto.Drawing.Bitmap(image.ToByteArray());
+                PCX pcx = new(data);
+                byte[] bmp = pcx.ConvertToBMP(false);
+                previewPcx.Image = new Eto.Drawing.Bitmap(bmp);
             }
             else
             {
