@@ -5,8 +5,6 @@ using System.Runtime.InteropServices;
 
 using Eto.Forms;
 
-using ImageMagick;
-
 using Microsoft.Xna.Framework.Audio;
 
 using ResourceUtilityLib;
@@ -185,10 +183,6 @@ namespace BrutGui
             switch (ResourceUtility.GetSupportedExtensions()[selected.extension])
             {
                 case "PCX":
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        metadata += "\n\nPCX previews are currently only available on Windows builds due to technical issues.\nPlease extract the file(s) and view them with an image viewer with PCX support.";
-                    }
                     break;
                 case "WAV":
                     break;
@@ -275,28 +269,19 @@ namespace BrutGui
 
         private void PreviewPCX()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Convert from internal bitmap back to PCX and then to standard Bitmap
+            byte[] data;
+            if (!Globals.resource.GetRestoreSetting())
             {
-                // Convert from internal bitmap back to PCX and then to standard Bitmap
-                byte[] data;
-                if (!Globals.resource.GetRestoreSetting())
-                {
-                    Globals.resource.RestorePCX();
-                    data = Globals.resource.GetResourceData(selected);
-                    Globals.resource.RetainBitmap();
-                }
-                else
-                {
-                    data = Globals.resource.GetResourceData(selected);
-                }
-                PCX pcx = new(data);
-                byte[] bmp = pcx.ConvertToBMP(false);
-                previewPcx.Image = new Eto.Drawing.Bitmap(bmp);
+                Globals.resource.RestorePCX();
+                data = Globals.resource.GetResourceData(selected);
+                Globals.resource.RetainBitmap();
             }
             else
             {
-                previewPcx.Image = null;
+                data = Globals.resource.GetResourceData(selected);
             }
+            previewPcx.Image = new Eto.Drawing.Bitmap(ImageHandler.ConvertPCXToBMP(data));
         }
 
         #nullable enable

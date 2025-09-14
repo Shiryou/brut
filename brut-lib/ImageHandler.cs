@@ -2,9 +2,6 @@
 
 using ResourceUtilityLib.Logging;
 
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-
 namespace ResourceUtilityLib
 {
     /// <summary>
@@ -64,6 +61,17 @@ namespace ResourceUtilityLib
         public static byte[] ConvertPCXToBitmap(byte[] data, bool rotate = false)
         {
             return new PCX(data).ConvertToBitmap(rotate);
+        }
+
+        /// <summary>
+        /// Converts PCX data to a BMP
+        /// </summary>
+        /// <param name="data">PCX data.</param>
+        /// <param name="rotate">Whether to rotate the image.</param>
+        /// <returns>The bitmap file data as a byte array.</returns>
+        public static byte[] ConvertPCXToBMP(byte[] data, bool rotate = false)
+        {
+            return new PCX(data).ConvertToBMP(rotate);
         }
 
         /// <summary>
@@ -129,18 +137,20 @@ namespace ResourceUtilityLib
 
         public byte[] ConvertToBMP(bool rotate)
         {
+            SaveBMPHeader(output);
             int width = header.Width;
             int height = header.Height;
             int padding = (4 - (width * 3) % 4) % 4; // Row padding
 
-            Image<Rgb24> img = new Image<Rgb24>(width, height);
-
             // Read the color palette (256 colors)
-            Rgb24[] palette = new Rgb24[256];
+            byte[][] palette = new byte[256][];
             data.BaseStream.Position = data.BaseStream.Length - 768;
             for (int i = 0; i < 256; i++)
             {
-                palette[i] = new Rgb24(data.ReadByte(), data.ReadByte(), data.ReadByte());
+                byte b = data.ReadByte();
+                byte g = data.ReadByte();
+                byte r = data.ReadByte();
+                palette[i] = new byte[] {r, g, b};
             }
 
             // Decode PCX data
@@ -158,7 +168,8 @@ namespace ResourceUtilityLib
                         {
                             if (x < width) // Ensure we don't go out of bounds
                             {
-                                img[x++, y] = palette[pixelValue]; // Set the pixel color from the palette
+                                output.Write(palette[pixelValue]); // Set the pixel color from the palette
+                                x++;
                             }
                         }
                     }
@@ -167,14 +178,20 @@ namespace ResourceUtilityLib
                         // If it's a regular byte, just set the pixel
                         if (x < width) // Ensure we don't go out of bounds
                         {
-                            img[x++, y] = palette[byteValue];
+                            output.Write(palette[byteValue]);
+                            x++;
                         }
                     }
                 }
+
+                // Write padding bytes
+                for (int p = 0; p < padding; p++)
+                {
+                    output.Write((byte)0);
+                }
             }
-            MemoryStream memoryStream = new();
-            img.SaveAsBmp(memoryStream); // Save as BMP to MemoryStream
-            return memoryStream.ToArray(); // Get the byte array
+
+            return ((MemoryStream)output.BaseStream).ToArray(); // Return the BMP data as byte array
         }
 
         /// <summary>
@@ -209,6 +226,36 @@ namespace ResourceUtilityLib
             output.Write(bitmap_header.Scale);
             output.Write(bitmap_header.CenterPoint);
             output.Write(bitmap_header.Type);
+        }
+
+        /// <summary>
+        /// Save the header of a bitmap file.
+        /// </summary>
+        private void SaveBMPHeader(BinaryWriter bw)
+        {
+            int bytesPerPixel = 3; // RGB
+            int rowLength = (header.Width * bytesPerPixel);
+            int padding = (4 - rowLength % 4) % 4; // Row padding
+            int rowPaddedLength = rowLength + padding;
+
+            bw.BaseStream.Position = 0;
+            bw.Write(new byte[] { (byte)'B', (byte)'M' });
+
+            bw.Write((Int32)(54 + (rowPaddedLength * header.Height))); // File size
+            bw.Write(new byte[4]); // Reserved fields
+            bw.Write((Int32)54);
+
+            // DIB header size
+            bw.Write(40); // DIB header size
+            bw.Write((Int32)header.Width);
+            bw.Write((Int32)(0-header.Height));
+            bw.Write((Int16)1); // Color planes
+            bw.Write((Int16)(bytesPerPixel * 8));
+            bw.Write((Int32)0);
+            bw.Write((Int32)(rowPaddedLength*header.Height)); // Size of the raw bitmap data (including padding)
+            bw.Write(new byte[8]);
+            bw.Write((Int32)256);
+            bw.Write((Int32)0);
         }
 
         /// <summary>
